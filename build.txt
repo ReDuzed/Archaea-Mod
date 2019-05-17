@@ -1,0 +1,9 @@
+author = TerrorPenguin, WarrenMark, RJ, PixelOrigin, Duze
+version = 0.3.8.30
+displayName = Archaea Mod
+homepage = 
+hideCode = true
+hideResources = true
+includeSource = false
+buildIgnore = *.csproj, *.user, obj\*, bin\*, .vs\*, *.ini, ArchaeaMod\*, archive\*, Transfer\*, ArchaeaMod-base\*, ArchaeaMod-vscode\*
+includePDB = false
