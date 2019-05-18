@@ -59,7 +59,7 @@ namespace ArchaeaMod.NPCs
         }
         public override void OnHitPlayer(Player target, int damage, bool crit)
         {
-            target.AddBuff(BuffID.Darkness, 300);
+            target.AddBuff(BuffID.Darkness, 600);
             NetMessage.SendData(MessageID.AddPlayerBuff, target.whoAmI, -1, null, BuffID.Darkness);
         }
         #region slime methods

@@ -62,7 +62,7 @@ namespace ArchaeaMod.NPCs
             if (!init)
             {
                 npc.target = ArchaeaNPC.FindClosest(npc, true).whoAmI;
-                SyncNPC();
+                SyncNPC(npc.position.X, npc.position.Y);
                 dustType = 6;
                 var dusts = ArchaeaNPC.DustSpread(npc.Center, dustType, 10);
                 foreach (Dust d in dusts)
@@ -81,10 +81,10 @@ namespace ArchaeaMod.NPCs
                 else
                 {
                     timer = attackTime + 50;
-                    move = ArchaeaNPC.FindAny(npc, npcTarget);
+                    move = ArchaeaNPC.FindAny(npc, npcTarget, true);
                     if (move != Vector2.Zero)
                     {
-                        SyncNPC();
+                        SyncNPC(move.X, move.Y);
                         var dusts = ArchaeaNPC.DustSpread(npc.Center, npc.width / 2, npc.height / 2, dustType, 10, 2.4f);
                         foreach (Dust d in dusts)
                             d.noGravity = true;
@@ -132,10 +132,11 @@ namespace ArchaeaMod.NPCs
             return npc.alpha == 0;
         }
 
-        public void SyncNPC()
+        public void SyncNPC(float x, float y)
         {
             if (Main.netMode == 2)
                 npc.netUpdate = true;
+            else npc.position = new Vector2(x, y);
         }
         public override void SendExtraAI(BinaryWriter writer)
         {
