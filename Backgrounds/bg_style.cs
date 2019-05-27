@@ -12,11 +12,10 @@ namespace ArchaeaMod.Backgrounds
 
         public override void FillTextureArray(int[] textureSlots)
         {
-            /*textureSlots[0] = mod.GetBackgroundSlot("Backgrounds/bg_magno");
+            textureSlots[0] = mod.GetBackgroundSlot("Backgrounds/bg_magno");
             textureSlots[1] = mod.GetBackgroundSlot("Backgrounds/bg_magno_surface");
             textureSlots[2] = mod.GetBackgroundSlot("Backgrounds/bg_magno_connector");
             textureSlots[3] = mod.GetBackgroundSlot("Backgrounds/bg_magno");
-            */
         }
     }   
 } 
