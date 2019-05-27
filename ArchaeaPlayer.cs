@@ -10,6 +10,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.Map;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
@@ -90,10 +91,18 @@ namespace ArchaeaMod
         public override void PreUpdate()
         {
             Color textColor = Color.Yellow;
+            //  ITEM TEXT and SKY FORT DEBUG GEN
             if (!start)
             {
-                Main.NewText("To enter commands, input LeftShift (instead of Enter)", textColor);
-                Main.NewText("Commands: /list 'npcs' 'items1' 'items2' 'items3', /npc [name], /npc 'strike', /item [name], /spawn, /day, /night, /rain 'off' 'on', hold Left Control and click to go to mouse", textColor);
+                if (Main.netMode == 0)
+                {
+                    Main.NewText("To enter commands, input LeftShift (instead of Enter)", textColor);
+                    Main.NewText("Commands: /list 'npcs' 'items1' 'items2' 'items3', /npc [name], /npc 'strike', /item [name], /spawn, /day, /night, /rain 'off' 'on', hold Left Control and click to go to mouse", textColor);
+                }
+                else 
+                {
+                    NetMessage.BroadcastChatMessage(NetworkText.FromLiteral("Input /info and use [Left Shift] to list commands"), textColor);
+                }
                 start = true;
             }
             if (KeyHold(Keys.LeftAlt))
@@ -102,6 +111,7 @@ namespace ArchaeaMod
                 {
                     //SkyHall hall = new SkyHall();
                     //hall.SkyFortGen();
+                    /*
                     Vector2 position;
                     do
                     {
@@ -109,6 +119,7 @@ namespace ArchaeaMod
                     } while (position.X < Main.spawnTileX + 150 && position.X > Main.spawnTileX - 150);
                     var s = new Structures(position);
                     s.InitializeFort();
+                    */
                     for (int i = 0; i < Main.rightWorld / 16; i++)
                         for (int j = 0; j < Main.bottomWorld / 16; j++)
                         {
@@ -124,7 +135,9 @@ namespace ArchaeaMod
             if (KeyHold(Keys.LeftControl) && LeftClick())
             {
                 if (Main.netMode != 0)
-                    NetHandler.Send(Packet.TeleportPlayer, 256, -1, player.whoAmI, Main.MouseWorld.X, Main.MouseWorld.Y);
+                {
+                    //  NetHandler.Send(Packet.TeleportPlayer, 256, -1, player.whoAmI, Main.MouseWorld.X, Main.MouseWorld.Y);
+                }
                 else player.Teleport(Main.MouseWorld);
             }
             string chat = (string)Main.chatText.Clone();
@@ -132,7 +145,10 @@ namespace ArchaeaMod
             if (chat.StartsWith("/info"))
             {
                 if (enteredCommand)
-                    Main.NewText("Commands: /list 'npcs' 'items1' 'items2' 'items3', /npc [name], /npc 'strike', /item [name], /spawn, /day, /night, /rain 'off' 'on', hold Left Control and click to go to mouse", textColor);
+                {
+                    if (Main.netMode != 2)
+                        Main.NewText("Commands: /list 'npcs' 'items1' 'items2' 'items3', /npc [name], /npc 'strike', /item [name], /spawn, /day, /night, /rain 'off' 'on', hold Left Control and click to go to mouse", textColor);
+                }
             }
             if (chat.StartsWith("/"))
             {
@@ -248,16 +264,16 @@ namespace ArchaeaMod
                             type = mod.ItemType(itemType);
                         if (modded)
                         {
-                            int t = Item.NewItem(player.position, type, mod.GetItem(itemType).item.maxStack);
+                            int t = Item.NewItem(Main.MouseWorld, type, mod.GetItem(itemType).item.maxStack);
                             if (Main.netMode != 0)
-                                NetHandler.Send(Packet.SpawnItem, 256, -1, t, Main.MouseWorld.X, Main.MouseWorld.Y);
+                                NetMessage.SendData(MessageID.SyncItem, -1, -1, null, t);
                         }
                         else
                         {
                             int.TryParse(stackCount, out stack);
-                            int t2 = Item.NewItem(player.position, type, stack == 0 ? 1 : stack);
+                            int t2 = Item.NewItem(Main.MouseWorld, type, stack == 0 ? 1 : stack);
                             if (Main.netMode != 0)
-                                NetHandler.Send(Packet.SpawnItem, 256, -1, t2, Main.MouseWorld.X, Main.MouseWorld.Y);
+                                NetMessage.SendData(MessageID.SyncItem, -1, -1, null, t2);
                         }
                     }
                 }
@@ -310,7 +326,7 @@ namespace ArchaeaMod
                 Main.drawingPlayerChat = false;
                 Main.chatRelease = false;
             }
-            if (KeyPress(Keys.O) && Main.netMode != 0 && ModeToggle.archaeaMode && Main.chatText == "")
+            if (KeyPress(Keys.O) && ModeToggle.archaeaMode && Main.chatText == "")
                 NetHandler.Send(Packet.SyncInput, 256, -1, Main.LocalPlayer.whoAmI);
         }
         public static bool LeftClick()

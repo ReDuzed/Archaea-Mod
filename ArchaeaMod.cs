@@ -2,7 +2,10 @@
 
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.Localization;
 using Terraria.ModLoader;
+
+using ArchaeaMod.Entities;
 
 namespace ArchaeaMod
 {
@@ -68,7 +71,7 @@ namespace ArchaeaMod
         {
             get { return ArchaeaMain.getMod; }
         }
-        public static void Send(byte type, int toWho = -1, int fromWho = -1, int i = 0, float f = 0f, float f2 = 0f, int i2 = 0, bool b = false)
+        public static void Send(byte type, int toWho = -1, int fromWho = -1, int i = 0, float f = 0f, float f2 = 0f, int i2 = 0, bool b = false, float f3 = 0f)
         {
             ModPacket packet = mod.GetPacket();
             packet.Write(type);
@@ -77,6 +80,7 @@ namespace ArchaeaMod
             packet.Write(f2);
             packet.Write(i2);
             packet.Write(b);
+            packet.Write(f3);
             packet.Send(toWho, fromWho);
         }
         public static void Receive(BinaryReader reader)
@@ -90,6 +94,7 @@ namespace ArchaeaMod
             float f2 = reader.ReadSingle();
             int i = reader.ReadInt32();
             bool b = reader.ReadBoolean();
+            float f3 = reader.ReadSingle();
             switch (type)
             {
                 case Packet.WorldTime:
@@ -107,6 +112,7 @@ namespace ArchaeaMod
                     else NPC.SpawnOnPlayer(i, t);
                     break;
                 case Packet.SpawnItem:
+                    Main.item[t].whoAmI = t;
                     NetMessage.SendData(21, -1, -1, null, t);
                     break;
                 case Packet.TeleportPlayer:
@@ -131,6 +137,19 @@ namespace ArchaeaMod
                         modWorld.progress = !modWorld.progress;
                     }
                     break;
+                case Packet.SyncEntity:
+                    if (Main.netMode == 2)
+                        Send(Packet.SyncEntity, -1, -1, t, f, f2, i, b, f3);
+                    else 
+                    {
+                        if (ArchaeaEntity.entity[t] != null)
+                        {
+                            ArchaeaEntity.entity[t].active = b;
+                            ArchaeaEntity.entity[t].Center = new Vector2(f, f2);
+                            ArchaeaEntity.entity[t].rotation = f3;
+                        }
+                    }
+                    break;
             }
         }
     }
@@ -144,6 +163,7 @@ namespace ArchaeaMod
             StrikeNPC = 5,
             ArchaeaMode = 6,
             SyncClass = 7,
-            SyncInput = 8;
+            SyncInput = 8,
+            SyncEntity = 9;
     }
 }

@@ -16,6 +16,10 @@ using Terraria.ModLoader.IO;
 using Terraria.World.Generation;
 
 using ArchaeaMod.GenLegacy;
+using ArchaeaMod.Items;
+using ArchaeaMod.Items.Alternate;
+using ArchaeaMod.Merged;
+using ArchaeaMod.Merged.Items;
 using ArchaeaMod.Merged.Tiles;
 using ArchaeaMod.Merged.Walls;
 
@@ -116,7 +120,6 @@ namespace ArchaeaMod
                         if (Main.tile[randX, randY].type == magnoStone)
                         {
                             WorldGen.TileRunner(randX, randY, WorldGen.genRand.Next(9, 12), WorldGen.genRand.Next(2, 6), magnoOre, false, 0f, 0f, false, true);
-                            WorldGen.TileRunner(randX, randY, WorldGen.genRand.Next(9, 12), WorldGen.genRand.Next(2, 6), magnoCaveWall, false, 0f, 0f, false, true);
                         }
                         progress.Value = k / (float)((4200 * 1200) * 6E-05);
                     }
@@ -154,18 +157,26 @@ namespace ArchaeaMod
                     int place = 0;
                     int width = Main.maxTilesX - 100;
                     int height = Main.maxTilesY - 100;
-                    Vector2[] ceilings = Treasures.GetCeiling(new Vector2(100, 100), width, height, false, magnoStone);
-                    Vector2[] walls = Treasures.GetWall(100, 100, (int)(Main.rightWorld / 16f) - 100, (int)(Main.bottomWorld / 16f) - 200, new ushort[] { magnoStone });
-                    Vector2[] floors = Treasures.GetFloor(new Vector2(100, 100), width, height, false, new ushort[] { magnoStone });
-                    foreach (Vector2 ceiling in ceilings)
-                        t.PlaceTile((int)ceiling.X, (int)ceiling.Y, crystal, false, false, 8);
-                    foreach (Vector2 wall in walls)
-                        t.PlaceTile((int)wall.X, (int)wall.Y, crystal, false, false, 8);
-                    foreach (Vector2 floor in floors)
+                    Vector2[] any = Treasures.FindAll(new Vector2(100, 100), width, height, false, new ushort[] { magnoStone });
+                    foreach (Vector2 floor in any)
                         if (floor != Vector2.Zero)
                         {
                             int i = (int)floor.X;
                             int j = (int)floor.Y;
+                            int style = 0;
+                            Tile top = Main.tile[i, j - 1];
+                            Tile bottom = Main.tile[i, j + 1];
+                            Tile left = Main.tile[i - 1, j];
+                            Tile right = Main.tile[i + 1, j];
+                            if (top.type == magnoStone && top.active())
+                                style = 0;
+                            if (left.type == magnoStone && left.active())
+                                style = 1;
+                            if (right.type == magnoStone && right.active())
+                                style = 2;
+                            if (bottom.type == magnoStone && bottom.active())
+                                style = 3;
+                            t.PlaceTile(i, j, crystal, true, false, 10, false, style);
                             if (!Main.tile[i + 1, j].active())
                             {
                                 place++;
@@ -173,7 +184,6 @@ namespace ArchaeaMod
                                     t.PlaceTile(i, j, crystal2x2, true, false, 8);
                                 else t.PlaceTile(i, j, crystal2x1, true, false, 8);
                             }
-                            else t.PlaceTile(i, j, crystal, false, false, 8);
                         }
                     progress.Value = 1f;
                     progress.End();
@@ -255,6 +265,74 @@ namespace ArchaeaMod
                     count++;
                 }*/
             #endregion
+        }
+        public override void PostWorldGen()
+        {
+            int[] types = new int[]
+            {
+                mod.ItemType<Broadsword>(),
+                mod.ItemType<Calling>(),
+                mod.ItemType<Deflector>(),
+                mod.ItemType<Sabre>(),
+                mod.ItemType<Staff>(),
+
+                mod.ItemType<cinnabar_dagger>(),
+                mod.ItemType<magno_book>(),
+                mod.ItemType<magno_yoyo>(),
+                mod.ItemType<m_fossil>(),
+
+                mod.ItemType<ArchaeaMod.Merged.Items.Materials.magno_bar>(),
+                ItemID.SilverBar,
+                ItemID.GoldBar,
+
+                ItemID.ArcheryPotion, 
+                ItemID.BattlePotion, 
+                ItemID.CalmingPotion, 
+                ItemID.GravitationPotion, 
+                ItemID.HunterPotion, 
+                ItemID.LesserHealingPotion, 
+                ItemID.IronskinPotion, 
+                ItemID.MiningPotion, 
+                ItemID.RecallPotion, 
+                ItemID.TeleportationPotion
+            };
+            
+            for (int i = 0; i < 1000; i++)
+            {
+                Chest chest = Main.chest[i];
+                if (chest == null)
+                    continue;
+                if (Main.tile[chest.x, chest.y].type == magnoChest)
+                {
+                    for (int j = 0; j < 4; j++)
+                    {
+                        int type = types[Main.rand.Next(types.Length)]; 
+                        chest.item[j].SetDefaults(type);
+                        int fossils = 0; 
+                        switch (j)
+                        {
+                            case 0:
+                                break;
+                            case 1:
+                                if (type == 0)
+                                    chest.item[j].stack = Main.rand.Next(8, 15);
+                                if (fossils < 2)
+                                {
+                                    if (type == 3)
+                                        fossils++;
+                                }
+                                else chest.item[j].SetDefaults(types[Main.rand.Next(types.Length)]);
+                                break;
+                            case 2:
+                                chest.item[j].stack = Main.rand.Next(6, 13);
+                                break;
+                            case 3:
+                                chest.item[j].stack = Main.rand.Next(1, 4);
+                                break;
+                        }
+                    }
+                }
+            }
         }
         public bool MagnoBiome;
         public bool SkyFort;
@@ -439,7 +517,7 @@ namespace ArchaeaMod
                 index++;
             }
         }
-        public bool PlaceTile(int i, int j, ushort tileType, bool genPlace = false, bool force = false, int proximity = -1, bool wall = false)
+        public bool PlaceTile(int i, int j, ushort tileType, bool genPlace = false, bool force = false, int proximity = -1, bool wall = false, int style = 0)
         {
             Tile tile = Main.tile[i, j];
             if (proximity != -1 && Vicinity(new Vector2(i, j), proximity, tileType))
@@ -449,7 +527,7 @@ namespace ArchaeaMod
                 tile.active(true);
                 tile.type = tileType;
             }
-            else WorldGen.PlaceTile(i, j, tileType, true, force);
+            else WorldGen.PlaceTile(i, j, tileType, true, force, -1, style);
             if (tile.type == tileType)
                 return true;
             return false;
@@ -485,6 +563,38 @@ namespace ArchaeaMod
                 else
                     break;
             }
+            return tiles;
+        }
+        public static Vector2[] FindAll(Vector2 region, int width, int height, bool overflow = false, ushort[] floorIDs = null)
+        {
+             int index = width * height * floorIDs.Length;
+            int amount = (int)Math.Sqrt(index) / 10;
+            int count = 0;
+            var tiles = new Vector2[index];
+            foreach (ushort floorType in floorIDs)
+                for (int i = (int)region.X; i < (int)region.X + width; i++)
+                    for (int j = (int)region.Y; j < (int)region.Y + height; j++)
+                    {
+                        if (!ArchaeaWorld.Inbounds(i, j)) continue;
+                        if (overflow & WorldGen.genRand.Next(5) == 0) continue;
+                        Tile origin = Main.tile[i, j];
+                        Tile ceiling = Main.tile[i, j - 1];
+                        Tile ground = Main.tile[i, j + 1];
+                        Tile right = Main.tile[i + 1, j];
+                        Tile ieft = Main.tile[i - 1, j];
+                        if (origin.active() && Main.tileSolid[origin.type]) continue;
+                        if (ceiling.active() && Main.tileSolid[ceiling.type] && ceiling.type == floorType || 
+                            ground.active() && Main.tileSolid[ground.type] && ground.type == floorType || 
+                            right.active() && Main.tileSolid[right.type] && right.type == floorType || 
+                            ieft.active() && Main.tileSolid[ieft.type] && ieft.type == floorType)
+                        {
+                            if (count < tiles.Length)
+                            {
+                                tiles[count] = new Vector2(i, j);
+                                count++;
+                            }
+                        }
+                    }
             return tiles;
         }
         public static Vector2[] GetFloor(Vector2 region, int width, int height, bool overflow = false, ushort[] floorIDs = null)
@@ -1610,7 +1720,7 @@ namespace ArchaeaMod
                                     WorldGen.PlaceTile(m, n, TileID.HangingLanterns);
                                     break;
                                 case ID.Chest:
-                                    WorldGen.PlaceChest(m, n, TileID.Containers);
+                                    WorldGen.PlaceChest(m, n, ArchaeaWorld.magnoChest);
                                     break;
                                 case ID.Furniture:
                                     type = furniture[WorldGen.genRand.Next(furniture.Length)];
@@ -1652,7 +1762,7 @@ namespace ArchaeaMod
                 if (!floor.active() && ground.type == groundID)
                 {
                     WorldGen.PlaceChest(m, j);
-                    if (floor.type == TileID.Containers)
+                    if (floor.type == ArchaeaWorld.magnoChest)
                         chest = true;
                 }
                 if (count < total)
