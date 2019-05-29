@@ -88,21 +88,20 @@ namespace ArchaeaMod
             };
         }
         private bool start;
+        public bool debugMenu;
         public override void PreUpdate()
         {
             Color textColor = Color.Yellow;
             //  ITEM TEXT and SKY FORT DEBUG GEN
-            if (!start)
+            if (!start && !Main.dedServ)
             {
                 if (Main.netMode == 0)
                 {
-                    Main.NewText("To enter commands, input LeftShift (instead of Enter)", textColor);
-                    Main.NewText("Commands: /list 'npcs' 'items1' 'items2' 'items3', /npc [name], /npc 'strike', /item [name], /spawn, /day, /night, /rain 'off' 'on', hold Left Control and click to go to mouse", textColor);
+                    Main.NewText("To enter commands, input [Tab] (instead of Enter)", Color.LightBlue);
+                    Main.NewText("Commands: /list 'npcs' 'items1' 'items2' 'items3', /npc [name], /npc 'strike', /item [name], /spawn, /day, /night, /rain 'off' 'on', hold [Left Control] and click to go to mouse", textColor);
                 }
-                else 
-                {
-                    NetMessage.BroadcastChatMessage(NetworkText.FromLiteral("Input /info and use [Left Shift] to list commands"), textColor);
-                }
+                if (Main.netMode == 1)
+                    NetMessage.BroadcastChatMessage(NetworkText.FromLiteral("Input /info and use [Tab] to list commands"), textColor);
                 start = true;
             }
             if (KeyHold(Keys.LeftAlt))
@@ -120,6 +119,7 @@ namespace ArchaeaMod
                     var s = new Structures(position);
                     s.InitializeFort();
                     */
+                    /*
                     for (int i = 0; i < Main.rightWorld / 16; i++)
                         for (int j = 0; j < Main.bottomWorld / 16; j++)
                         {
@@ -129,7 +129,7 @@ namespace ArchaeaMod
                             Main.updateMap = true;
                             Main.Map.Update(i, j, 255);
                             Main.Map.ConsumeUpdate(i, j);
-                        }
+                        }*/
                 }
             }
             if (KeyHold(Keys.LeftControl) && LeftClick())
@@ -141,13 +141,16 @@ namespace ArchaeaMod
                 else player.Teleport(Main.MouseWorld);
             }
             string chat = (string)Main.chatText.Clone();
-            bool enteredCommand = KeyPress(Keys.LeftShift);
+            bool enteredCommand = KeyPress(Keys.Tab);
             if (chat.StartsWith("/info"))
             {
                 if (enteredCommand)
                 {
                     if (Main.netMode != 2)
+                    {
                         Main.NewText("Commands: /list 'npcs' 'items1' 'items2' 'items3', /npc [name], /npc 'strike', /item [name], /spawn, /day, /night, /rain 'off' 'on', hold Left Control and click to go to mouse", textColor);
+                        Main.NewText("Press [F2] and type an item name in chat, then hover over item icon", textColor);
+                    }
                 }
             }
             if (chat.StartsWith("/"))
@@ -162,7 +165,9 @@ namespace ArchaeaMod
                         "Sky_1",
                         "Sky_2",
                         "Slime_Itchy",
-                        "Slime_Mercurial"
+                        "Slime_Mercurial",
+                        "Magnoliac_head",
+                        "Sky_boss"
                     };
                     string[] items1 = new string[]
                     {
@@ -260,6 +265,7 @@ namespace ArchaeaMod
                         bool modded = false;
                         int type;
                         int stack = 0;
+                        int.TryParse(stackCount, out stack);
                         if (modded = !int.TryParse(itemType, out type))
                             type = mod.ItemType(itemType);
                         if (modded)
@@ -281,8 +287,9 @@ namespace ArchaeaMod
                     if (enteredCommand)
                     {
                         if (Main.netMode != 0)
-                            NetHandler.Send(Packet.TeleportPlayer, 256, -1, player.whoAmI, Main.spawnTileX * 16, Main.spawnTileY * 16);
-                        else player.Teleport(new Vector2(Main.spawnTileX * 16, Main.spawnTileY * 16));
+                            NetHandler.Send(Packet.TeleportPlayer, 256, -1, Main.LocalPlayer.whoAmI, Main.spawnTileX * 16, Main.spawnTileY * 16);
+                        else
+                            player.Teleport(new Vector2(Main.spawnTileX * 16, Main.spawnTileY * 16));
                     }
                 if (chat.StartsWith("/day"))
                 {
@@ -326,12 +333,22 @@ namespace ArchaeaMod
                 Main.drawingPlayerChat = false;
                 Main.chatRelease = false;
             }
-            if (KeyPress(Keys.O) && ModeToggle.archaeaMode && Main.chatText == "")
+            if (KeyPress(Keys.F3) && ModeToggle.archaeaMode && Main.chatText == "")
                 NetHandler.Send(Packet.SyncInput, 256, -1, Main.LocalPlayer.whoAmI);
+            if (KeyPress(Keys.F2))
+            {
+                if (Main.netMode == 1)
+                    NetHandler.Send(Packet.Debug, 256, -1, player.whoAmI);
+                else debugMenu = !debugMenu;
+            }
         }
         public static bool LeftClick()
         {
             return Main.mouseLeftRelease && Main.mouseLeft;
+        }
+        public static bool RightHold()
+        {
+            return Main.mouseRight;
         }
         public static bool KeyPress(Keys key)
         {
@@ -561,6 +578,63 @@ namespace ArchaeaMod
             else
             {
                 DarkenedVision();
+            }
+            if (debugMenu)
+                DebugMenu();
+        }
+        private bool init;
+        private List<string> name = new List<string>();
+        private List<int> id = new List<int>();
+        private void DebugMenu()
+        {
+            if (!init)
+            {
+                for (int i = 0; i < Main.itemTexture.Length; i++)
+                {
+                    int item = Item.NewItem(Vector2.Zero, i, 1);
+                    name.Add(Main.item[item].Name);
+                    id.Add(i);
+                    Main.item[item].active = false;
+                }
+                init = true;
+            }
+            Func<string, Texture2D[]> search = delegate(string Name)
+            {
+                List<Texture2D> t = new List<Texture2D>();
+                t.Clear();
+                if (Name.Length > 2)
+                {
+                    for (int i = 0; i < name.Count; i++)
+                    {
+                        if (name[i].ToLower().Contains(Name.ToLower()))
+                        {
+                            t.Add(Main.itemTexture[i]);
+                        }
+                    }
+                }
+                else t.Add(Main.magicPixel);
+                return t.ToArray();
+            };
+            Texture2D[] array;
+            if ((array = search(Main.chatText)).Length > 0 && array[0] != Main.magicPixel)
+            {
+                int index = Main.itemTexture.ToList().IndexOf(array[0]);
+                int x = 20;
+                int y = 112;
+                sb.Draw(array[0], new Vector2(x, y), Color.White);
+                sb.DrawString(Main.fontMouseText, string.Format("{0} {1}", name[index], id[index]), new Vector2(x + 50, y + 4), Color.White);
+
+                Rectangle grab = new Rectangle(x, y, 48, 48);
+                if (grab.Contains(Main.MouseScreen.ToPoint()))
+                {
+                    sb.DrawString(Main.fontMouseText, "Left/Right click", new Vector2(x, y + 50), Color.White);
+                    if (LeftClick() || RightHold())
+                    {
+                        int t = Item.NewItem(player.Center, index);
+                        if (Main.netMode != 0)
+                            NetMessage.SendData(MessageID.SyncItem, -1, -1, null, t);
+                    }
+                }
             }
         }
         public override Texture2D GetMapBackgroundImage()

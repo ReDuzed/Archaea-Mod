@@ -150,6 +150,18 @@ namespace ArchaeaMod
                         }
                     }
                     break;
+                case Packet.Debug:
+                    if (Main.netMode == 2)
+                        Send(Packet.Debug, t, -1, t);
+                    else
+                    {
+                        if (t == Main.LocalPlayer.whoAmI)
+                        {
+                            var modPlayer = Main.player[t].GetModPlayer<ArchaeaPlayer>();
+                            modPlayer.debugMenu = !modPlayer.debugMenu;
+                        }
+                    }
+                    break;
             }
         }
     }
@@ -164,6 +176,7 @@ namespace ArchaeaMod
             ArchaeaMode = 6,
             SyncClass = 7,
             SyncInput = 8,
-            SyncEntity = 9;
+            SyncEntity = 9,
+            Debug = 10;
     }
 }
