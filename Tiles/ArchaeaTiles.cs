@@ -23,7 +23,7 @@ namespace ArchaeaMod.Tiles
                     if (tile.type == ArchaeaWorld.crystal ||
                         tile.type == ArchaeaWorld.crystal2x1 ||
                         tile.type == ArchaeaWorld.crystal2x2)
-                        return false;
+                        return mod.GetModWorld<ArchaeaWorld>().downedMagno;
                 }
             return base.CanExplode(i, j, type);
         }
@@ -36,7 +36,7 @@ namespace ArchaeaMod.Tiles
                     if (tile.type == ArchaeaWorld.crystal ||
                         tile.type == ArchaeaWorld.crystal2x1 ||
                         tile.type == ArchaeaWorld.crystal2x2)
-                        return false;
+                        return mod.GetModWorld<ArchaeaWorld>().downedMagno;
                 }
             return base.CanKillTile(i, j, type, ref blockDamaged);
         }
