@@ -27,10 +27,10 @@ namespace ArchaeaMod.Merged.Tiles
             TileObjectData.newTile.CoordinatePadding = 2;
             TileObjectData.newAlternate.CopyFrom(TileObjectData.newTile);
             TileObjectData.newAlternate.AnchorLeft = new AnchorData(AnchorType.SolidSide, 1, 0);
-            TileObjectData.addAlternate(0);
+            TileObjectData.addAlternate(1);
             TileObjectData.newAlternate.CopyFrom(TileObjectData.newTile);
             TileObjectData.newAlternate.AnchorTop = new AnchorData(AnchorType.SolidTile, 1, 0);
-            TileObjectData.addAlternate(1);
+            TileObjectData.addAlternate(0);
             TileObjectData.newAlternate.CopyFrom(TileObjectData.newTile);
             TileObjectData.newAlternate.AnchorRight = new AnchorData(AnchorType.SolidSide, 1, 0);
             TileObjectData.addAlternate(2);
@@ -51,11 +51,11 @@ namespace ArchaeaMod.Merged.Tiles
         }
         public override bool CanKillTile(int i, int j, ref bool blockDamaged)
         {
-            return false;
+            return mod.GetModWorld<ArchaeaWorld>().downedMagno;
         }
         public override bool CanExplode(int i, int j)
         {
-            return false;
+            return mod.GetModWorld<ArchaeaWorld>().downedMagno;
         }
         public override void KillTile(int i, int j, ref bool fail, ref bool effectOnly, ref bool noItem)
         {

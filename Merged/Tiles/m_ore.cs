@@ -6,6 +6,7 @@ using Terraria;
 using Terraria.DataStructures;
 using Terraria.Enums;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
@@ -43,8 +44,16 @@ namespace ArchaeaMod.Merged.Tiles
         public override bool Drop(int i, int j)
         {
             float chance = Main.rand.NextFloat();
+            if (Main.netMode == 2)
+                NetHandler.Send(Packet.TileExplode, -1, -1, i, chance, 0.3f, j);
             if (chance >= 0.30f)
                 return true;
+            if (Main.netMode == 0)
+                TileExplode(i, j);
+            return true;
+        }
+        public static void TileExplode(int i, int j)
+        {
             int x = i * 16 + 8;
             int y = j * 16 + 8;
             float range = 3f * 16;
@@ -63,8 +72,11 @@ namespace ArchaeaMod.Merged.Tiles
                 }
             }
             foreach (Player player in proximity)
+            {
                 player.Hurt(PlayerDeathReason.ByCustomReason(player.name + " struck dead in a mining accident"), 10, player.position.X / 16 < i ? -1 : 1);
-            return true;
+                if (Main.netMode == 2)
+                    NetMessage.SendData(MessageID.PlayerHurtV2, player.whoAmI, -1, null);
+            }
         }
     }
 }
