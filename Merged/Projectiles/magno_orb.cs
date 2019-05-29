@@ -64,7 +64,6 @@ namespace ArchaeaMod.Merged.Projectiles
                 else projectile.velocity = Vector2.Zero;
 
                 oldAngle = (float)Math.Atan2(Main.MouseWorld.Y - projectile.Center.Y, Main.MouseWorld.X - projectile.Center.X);
-                projectile.netUpdate = true;
             }
             else
             {
@@ -81,13 +80,14 @@ namespace ArchaeaMod.Merged.Projectiles
                 int orbDust = Dust.NewDust(projectile.position, projectile.width, projectile.height, dustType, 0f, 0f, 0, default(Color), 1f);
                 Main.dust[orbDust].noGravity = true;
             }
+            if (projectile.velocity.X <= projectile.oldVelocity.X || projectile.velocity.X > projectile.oldVelocity.X || projectile.velocity.Y <= projectile.oldVelocity.Y || projectile.velocity.Y > projectile.oldVelocity.Y)
+                projectile.netUpdate = true;
         }
         public override void Kill(int timeLeft)
         {
             for (float k = 0; k < MathHelper.ToRadians(360); k += 0.017f * 9)
             {
                 int Proj1 = Projectile.NewProjectile(projectile.position + new Vector2(projectile.width / 2, projectile.height / 2), Distance(null, k, 16f), mod.ProjectileType("dust_diffusion"), projectile.damage, 7.5f, projectile.owner, Distance(null, k, 16f).X, Distance(null, k, 16f).Y);
-                Main.projectile[Proj1].netUpdate = true;
                 //  if (Main.netMode == 1) NetMessage.SendData(27, -1, -1, null, Proj1);
             }
             Main.PlaySound(2, projectile.position, 14);
@@ -97,8 +97,6 @@ namespace ArchaeaMod.Merged.Projectiles
         {
             if (Main.netMode == netID)
             {
-                NetMessage.SendData(MessageID.SyncProjectile, -1, -1, null, projectile.whoAmI, projectile.position.X, projectile.position.Y);
-                projectile.netUpdate = true;
             }
         }
 

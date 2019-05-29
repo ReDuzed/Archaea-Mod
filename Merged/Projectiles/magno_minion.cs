@@ -188,6 +188,8 @@ namespace ArchaeaMod.Merged.Projectiles
                     targeted = false;
                 }
             }
+            if (projectile.velocity.X <= projectile.oldVelocity.X || projectile.velocity.X > projectile.oldVelocity.X || projectile.velocity.Y <= projectile.oldVelocity.Y || projectile.velocity.Y > projectile.oldVelocity.Y)
+                projectile.netUpdate = true;
         }
 
         public override bool? CanCutTiles()
