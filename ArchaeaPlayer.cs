@@ -100,7 +100,7 @@ namespace ArchaeaMod
                     Main.NewText("To enter commands, input [Tab] (instead of Enter)", Color.LightBlue);
                     Main.NewText("Commands: /list 'npcs' 'items1' 'items2' 'items3', /npc [name], /npc 'strike', /item [name], /spawn, /day, /night, /rain 'off' 'on', hold [Left Control] and click to go to mouse", textColor);
                 }
-                if (Main.netMode == 1)
+                if (Main.netMode == 2)
                     NetMessage.BroadcastChatMessage(NetworkText.FromLiteral("Input /info and use [Tab] to list commands"), textColor);
                 start = true;
             }
@@ -119,25 +119,25 @@ namespace ArchaeaMod
                     var s = new Structures(position);
                     s.InitializeFort();
                     */
-                    /*
-                    for (int i = 0; i < Main.rightWorld / 16; i++)
-                        for (int j = 0; j < Main.bottomWorld / 16; j++)
-                        {
-                            Main.mapInit = true;
-                            Main.loadMap = true;
-                            Main.refreshMap = true;
-                            Main.updateMap = true;
-                            Main.Map.Update(i, j, 255);
-                            Main.Map.ConsumeUpdate(i, j);
-                        }*/
+                    if (Main.netMode == 0)
+                    {
+                        for (int i = 0; i < Main.rightWorld / 16; i++)
+                            for (int j = 0; j < Main.bottomWorld / 16; j++)
+                            {
+                                Main.mapInit = true;
+                                Main.loadMap = true;
+                                Main.refreshMap = true;
+                                Main.updateMap = true;
+                                Main.Map.Update(i, j, 255);
+                                Main.Map.ConsumeUpdate(i, j);
+                            }
+                    }
                 }
             }
             if (KeyHold(Keys.LeftControl) && LeftClick())
             {
-                if (Main.netMode != 0)
-                {
-                    //  NetHandler.Send(Packet.TeleportPlayer, 256, -1, player.whoAmI, Main.MouseWorld.X, Main.MouseWorld.Y);
-                }
+                if (Main.netMode == 2)
+                    NetHandler.Send(Packet.TeleportPlayer, -1, -1, player.whoAmI, Main.MouseWorld.X, Main.MouseWorld.Y);
                 else player.Teleport(Main.MouseWorld);
             }
             string chat = (string)Main.chatText.Clone();

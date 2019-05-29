@@ -118,7 +118,10 @@ namespace ArchaeaMod
                 case Packet.TeleportPlayer:
                     if (Main.netMode == 2)
                         Send(Packet.TeleportPlayer, t, -1, t, f, f2);
-                    else Main.player[t].Teleport(new Vector2(f, f2));
+                    else if (t == Main.LocalPlayer.whoAmI)
+                    {
+                        Main.player[t].Teleport(new Vector2(f, f2));
+                    }
                     break;
                 case Packet.StrikeNPC:
                     Main.npc[t].StrikeNPC(i, f, 0);
@@ -162,6 +165,21 @@ namespace ArchaeaMod
                         }
                     }
                     break;
+                case Packet.TileExplode:
+                    if (f < f2)
+                        ArchaeaMod.Merged.Tiles.m_ore.TileExplode(t, i);
+                    break;
+                case Packet.DownedMagno:
+                    if (Main.netMode == 2)
+                    {
+                        Send(Packet.DownedMagno, -1, -1);
+                        mod.GetModWorld<ArchaeaWorld>().downedMagno = true;
+                    }
+                    else
+                    {
+                        mod.GetModWorld<ArchaeaWorld>().downedMagno = true;
+                    }
+                    break;
             }
         }
     }
@@ -177,6 +195,8 @@ namespace ArchaeaMod
             SyncClass = 7,
             SyncInput = 8,
             SyncEntity = 9,
-            Debug = 10;
+            Debug = 10,
+            TileExplode = 11,
+            DownedMagno = 12;
     }
 }

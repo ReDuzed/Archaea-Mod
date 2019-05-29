@@ -350,6 +350,7 @@ namespace ArchaeaMod
         public override TagCompound Save()
         {
             return new TagCompound {
+                { "m_downed", downedMagno },
                 { "First", first },
                 { "Classes", classes },
                 { "IDs", playerIDs }
@@ -357,6 +358,7 @@ namespace ArchaeaMod
         }
         public override void Load(TagCompound tag)
         {
+            downedMagno = tag.GetBool("m_downed");
             first = tag.GetBool("First");
             classes = tag.Get<List<int>>("Classes");
             playerIDs = tag.Get<List<int>>("IDs");
