@@ -59,7 +59,7 @@ namespace ArchaeaMod.Merged.NPCs
                 npc.velocity = Vector2.Zero;
                 chaseSpeed = 5f;
             }
-            if (!head.active || head.life <= 0)
+            if ((!head.active || head.life <= 0) || !leader.active)
                 npc.active = false;
         }
         public override bool CheckActive()
