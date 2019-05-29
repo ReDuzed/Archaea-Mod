@@ -139,7 +139,12 @@ namespace ArchaeaMod.NPCs.Bosses
         }
         public override void NPCLoot()
         {
-            mod.GetModWorld<ArchaeaWorld>().downedMagno = true;
+            if (Main.netMode == 0)
+                mod.GetModWorld<ArchaeaWorld>().downedMagno = true;
+            else
+            {
+                NetHandler.Send(Packet.DownedMagno, -1, -1);
+            }
         }
     }
 
