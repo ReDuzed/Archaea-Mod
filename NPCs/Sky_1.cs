@@ -43,6 +43,16 @@ namespace ArchaeaMod.NPCs
         {
             if (!init)
             {
+                if (Main.tile[(int)npc.position.X / 16, (int)npc.position.Y / 16].wall != ArchaeaWorld.skyBrickWall)
+                {
+                    Vector2 newPosition = ArchaeaNPC.FindAny(npc, target(), true, 800);
+                    if (newPosition != Vector2.Zero)
+                    {
+                        npc.position = newPosition;
+                        npc.netUpdate = true;
+                    }
+                    else return false;
+                }
                 oldX = npc.position.X;
                 upperPoint = npc.position.Y - 50f;
                 idle = npc.position;

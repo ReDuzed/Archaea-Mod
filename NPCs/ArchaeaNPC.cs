@@ -62,6 +62,10 @@ namespace ArchaeaMod
         {
             get { return getMod.NPCType<NPCs.Bosses.Sky_boss>(); }
         }
+        public static int Gargoyle
+        {
+            get { return getMod.NPCType<NPCs.Sky_3>(); }
+        }
     }
 }
 
@@ -101,7 +105,8 @@ namespace ArchaeaMod.NPCs
             pool.Add(ModNPCID.Mimic,            MagnoBiome && Main.hardMode ? 0.1f : 0f);
             bool SkyFort = spawnInfo.player.GetModPlayer<ArchaeaPlayer>(mod).SkyFort;
             pool.Add(ModNPCID.Observer,         SkyFort ? 0.4f : 0f);
-            pool.Add(ModNPCID.Marauder,         SkyFort ? 0.6f : 0f);
+            pool.Add(ModNPCID.Marauder,         SkyFort ? 0.4f : 0f);
+            pool.Add(ModNPCID.Gargoyle,         SkyFort ? 0.2f : 0f);
         }
         public override bool CheckActive(NPC npc)
         {
@@ -239,21 +244,17 @@ namespace ArchaeaMod.NPCs
         }
         public static Vector2 FindAny(NPC npc, Player target, bool findGround = true, int range = 400)
         {
-            int tries = 0;
             int x = 0, y = 0;
-            while (tries++ < range)
+            x = Main.rand.Next((int)target.Center.X - range, (int)target.Center.X + range);
+            y = Main.rand.Next((int)target.Center.Y - (int)(range * 0.67f), (int)target.Center.Y + (int)(range * 0.67f));
+            x = (x - (x % 16)) / 16;
+            y = (y - (y % 16)) / 16;
+            if (!ArchaeaWorld.Inbounds(x, y))
+                return Vector2.Zero;
+            if (findGround)
             {
-                x = Main.rand.Next((int)target.Center.X - range, (int)target.Center.X + range);
-                y = Main.rand.Next((int)target.Center.Y - (int)(range * 0.67f), (int)target.Center.Y + (int)(range * 0.67f));
-                x = (x - (x % 16)) / 16;
-                y = (y - (y % 16)) / 16;
-                if (findGround)
-                {
-                    if (!Main.tile[x, y + npc.height / 16 + 1].active() || !Main.tileSolid[Main.tile[x, y + npc.height / 16 + 1].type] || !Main.tileSolid[Main.tile[x + 1, y + npc.height / 16 + 1].type] || Main.tile[x, y + (npc.height - 4) / 16].active())
-                        return Vector2.Zero;
-                    else break;
-                }
-                else break;
+                if (!Main.tile[x, y + npc.height / 16 + 1].active() || !Main.tileSolid[Main.tile[x, y + npc.height / 16 + 1].type] || !Main.tileSolid[Main.tile[x + 1, y + npc.height / 16 + 1].type] || Main.tile[x, y + (npc.height - 4) / 16].active())
+                    return Vector2.Zero;
             }
             return new Vector2(x * 16, y * 16);
         }
@@ -344,13 +345,14 @@ namespace ArchaeaMod.NPCs
         {
             return (float)Math.Atan2(to.Y - from.Y, to.X - from.X);
         }
-        public static Dust[] DustSpread(Vector2 v, int width = 1, int height = 1, int dustType = 6, int total = 10, float scale = 1f, Color color = default(Color))
+        public static Dust[] DustSpread(Vector2 v, int width = 1, int height = 1, int dustType = 6, int total = 10, float scale = 1f, Color color = default(Color), bool noGravity = false)
         {
             Dust[] dusts = new Dust[total];
             for (int k = 0; k < total; k++)
             {
                 Vector2 speed = ArchaeaNPC.AngleToSpeed(ArchaeaNPC.RandAngle(), 8f);
                 dusts[k] = Dust.NewDustDirect(v + speed, width, height, dustType, speed.X, speed.Y, 0, color, scale);
+                dusts[k].noGravity = noGravity;
             }
             return dusts;
         }
@@ -387,7 +389,17 @@ namespace ArchaeaMod.NPCs
             velocity.X = velocity.X > 0.1f ? velocity.X -= 0.05f : 0f;
             velocity.X = velocity.X < -0.1f ? velocity.X += 0.05f : 0f;
         }
-
+        public static void SlowDown(ref Vector2 velocity, float rate = 0.05f)
+        {
+            if (velocity.X > 0.1f)
+                velocity.X -= rate;
+            if (velocity.X < -0.1f) 
+                velocity.X += rate;
+            if (velocity.Y > 0.1f)
+                velocity.Y -= rate;
+            if (velocity.Y < -0.1f)
+                velocity.Y += rate;
+        }
         public static void PositionToVel(NPC npc, Vector2 change, float speedX, float speedY, bool clamp = false, float min = -2.5f, float max = 2.5f, bool wobble = false, double degree = 0f)
         {
             float cos = wobble ? (float)(0.05f * Math.Cos(degree)) : 0f;

@@ -27,6 +27,7 @@ namespace ArchaeaMod.NPCs
             npc.defense = 10;
             npc.damage = 10;
             npc.value = 350;
+            npc.alpha = 255;
             npc.lavaImmune = true;
         }
 
@@ -65,8 +66,20 @@ namespace ArchaeaMod.NPCs
             if (!init)
             {
                 pathing = 1;
+                if (Main.tile[(int)npc.position.X / 16, (int)npc.position.Y / 16].wall != ArchaeaWorld.skyBrickWall)
+                {
+                    Vector2 newPosition = ArchaeaNPC.FindAny(npc, target(), true, 800);
+                    if (newPosition != Vector2.Zero)
+                    {
+                        npc.position = newPosition;
+                        npc.netUpdate = true;
+                    }
+                    else return;
+                }
                 init = true;
             }
+            if (npc.alpha > 0)
+                npc.alpha -= (int)(1f / 30f);
             if (timer++ > 600)
             {
                 timer = 0;
