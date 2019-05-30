@@ -70,6 +70,9 @@ namespace ArchaeaMod.NPCs
                 parts[0] = NPC.NewNPC(x, y, type, 0, npc.whoAmI);
                 Main.npc[parts[0]].whoAmI = parts[0];
                 Main.npc[parts[0]].realLife = npc.whoAmI;
+                Main.npc[parts[0]].defense = npc.defense;
+                Main.npc[parts[0]].lifeMax = npc.lifeMax;
+                Main.npc[parts[0]].life = npc.lifeMax;
                 neck = Main.npc[parts[0]];
                 for (int i = 1; i < maxParts; i++)
                 {
@@ -77,6 +80,9 @@ namespace ArchaeaMod.NPCs
                     parts[i] = NPC.NewNPC(x, y, type, 0, parts[i - 1], npc.whoAmI);
                     Main.npc[parts[i]].whoAmI = parts[i];
                     Main.npc[parts[i]].realLife = npc.whoAmI;
+                    Main.npc[parts[i]].defense = npc.defense;
+                    Main.npc[parts[i]].lifeMax = npc.lifeMax;
+                    Main.npc[parts[i]].life = npc.lifeMax;
                 }
                 foreach (int part in parts)
                 {
