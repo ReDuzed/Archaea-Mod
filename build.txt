@@ -1,5 +1,5 @@
 author = TerrorPenguin, WarrenMark, RJ, PixelOrigin, Duze
-version = 0.3.8.30
+version = 0.4.1.30
 displayName = Archaea Mod
 homepage = 
 hideCode = true
