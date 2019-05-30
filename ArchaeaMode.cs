@@ -38,8 +38,8 @@ namespace ArchaeaMod.Mode
             archaeaMode = tag.GetBool("ArchaeaMode");
             healthScale = tag.GetFloat("HealthScale");
             damageScale = tag.GetFloat("DamageScale");
-            dayCount = tag.GetAsDouble("DayCount");
-            totalTime = tag.GetDouble("TotalTime");
+            dayCount = tag.GetFloat("DayCount");
+            totalTime = tag.GetFloat("TotalTime");
         }
         public override void NetSend(BinaryWriter writer)
         {
@@ -50,8 +50,8 @@ namespace ArchaeaMod.Mode
         public override void NetReceive(BinaryReader reader)
         {
             archaeaMode = reader.ReadBoolean();
-            totalTime = reader.ReadDouble();
-            dayCount = reader.ReadDouble();
+            totalTime = reader.ReadSingle();
+            dayCount = reader.ReadSingle();
         }
         private bool init;
         public override void PreUpdate()
@@ -59,14 +59,14 @@ namespace ArchaeaMod.Mode
             if (!init)
                 init = true;
         }
-        public static double dayCount;
-        public double totalTime;
+        public static float dayCount;
+        public float totalTime;
         public override void PostUpdate()
         {
-            if (Main.netMode == 0 && ArchaeaPlayer.KeyPress(Keys.O))
-                progress = !progress;
-            totalTime += Main.frameRate / 60d;
-            dayCount = totalTime / Main.dayLength;
+            //if (Main.netMode == 0 && ArchaeaPlayer.KeyPress(Keys.O))
+            //    progress = !progress;
+            totalTime += (float)Main.frameRate / 60f;
+            dayCount = totalTime / (float)Main.dayLength;
         }
         public override void PostDrawTiles()
         {

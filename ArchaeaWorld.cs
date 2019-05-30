@@ -138,8 +138,8 @@ namespace ArchaeaMod
                     Vector2 position;
                     do
                     {
-                        position = new Vector2(WorldGen.genRand.Next(200, Main.maxTilesX - 200), 50);
-                    } while (position.X < Main.spawnTileX + 150 && position.X > Main.spawnTileX - 150);
+                        position = new Vector2(WorldGen.genRand.Next(200, Main.maxTilesX - 600), 50);
+                    } while (position.X < Main.spawnTileX + 250 && position.X > Main.spawnTileX - 250);
                     var s = new Structures(position, skyBrick, skyBrickWall);
                     s.InitializeFort();
                     progress.Value = 1f;
@@ -878,7 +878,6 @@ namespace ArchaeaMod
             //island = new int[cloud, cloud / 2];
             //InitIsland();
             FortPathing(radius, roomX, roomY, lY);
-            Main.NewText("1");
 
             int lengthX = fort[0].GetLength(0);
             int lengthY = fort[0].GetLength(1);
@@ -888,20 +887,18 @@ namespace ArchaeaMod
             int y1 = 50, y2 = y1, y3;
             int[,] cRoom;
             //GenerateStructure(600, 50 + fort[0].GetLength(1), island);
-            GenerateStructure(x1 = 600 + center - lengthX / 2, 50, fort[0], TileID.StoneSlab, WallID.StoneSlab);
-            GenerateStructure(x2 = 600 + center + lengthX / 2, 50, fort[1], TileID.StoneSlab, WallID.StoneSlab);
-            GenerateStructure(x3 = 600 + center + lengthX / 2 + lengthX, y3 = (int)(50 + lengthY * 0.33f), cRoom = Chamber((int)(lengthY * 0.67f)), TileID.StoneSlab, WallID.StoneSlab);
-            Main.NewText("2");
+            GenerateStructure(x1 = (int)origin.X + center - lengthX / 2, 50, fort[0], tileID, wallID);
+            GenerateStructure(x2 = (int)origin.X + center + lengthX / 2, 50, fort[1], tileID, wallID);
+            GenerateStructure(x3 = (int)origin.X + center + lengthX / 2 + lengthX, y3 = (int)(50 + lengthY * 0.33f), cRoom = Chamber((int)(lengthY * 0.67f)), tileID, wallID);
+            ChamberRoof(x3, y1, cRoom.GetLength(0), (int)(lengthY * 0.33f));
 
-            PlaceInteriorRooms(new Vector2(600 + center - lengthX / 2, 50), roomX, roomY, fort[0], roomTypes);
-            PlaceInteriorRooms(new Vector2(600 + center + lengthX / 2, 50), roomX, roomY, fort[1], roomTypes);
-            Main.NewText("3");
+            PlaceInteriorRooms(new Vector2((int)origin.X + center - lengthX / 2, 50), roomX, roomY, fort[0], roomTypes);
+            PlaceInteriorRooms(new Vector2((int)origin.X + center + lengthX / 2, 50), roomX, roomY, fort[1], roomTypes);
             house = new int[max][,];
             rooms = new int[max - 1][,];
             
             house[0] = fort[0];
             SkyRoom();
-            Main.NewText("4");
 
             GenConnect(x1, 50 + lengthY - 10, 20, 8);
             GenConnect(x1 + lengthX - 15, 50 + 5, 20, 8);
@@ -909,6 +906,20 @@ namespace ArchaeaMod
             GenConnect(x2 + lengthX - 50, 50 + lengthY - 11, 40 + cRoom.GetLength(0) / 2, 6);
             GenConnect(x3 + cRoom.GetLength(0) / 2 - 10, 50 + lengthY - 20, 8, 14);
             Main.NewText("Gen complete");
+        }
+        internal void ChamberRoof(int x, int y, int width, int height)
+        {
+            float n = y;
+            Main.NewText(x + " " + y + " " + width + " " + height);
+            for (int i = x; i < x + width; i++)
+            {
+                n += (float)height / width;
+                for (int j = (int)n; j < y + height; j++)
+                {
+                    Main.tile[i, j].active(true);
+                    Main.tile[i, j].type = tileID;
+                }
+            }
         }
         internal void GenConnect(int x, int y, int width, int height)
         {
@@ -921,18 +932,19 @@ namespace ArchaeaMod
         }
         internal int[,] Chamber(int height)
         {
-            int[,] room = new int[50, height];
+            int width = 100;
+            int[,] room = new int[width, height];
             for (int i = 0; i < room.GetLength(0); i++)
             for (int j = 0; j < height; j++)
             {
                 room[i,j] = ID.Tile;
             }
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < width / 4; i++)
             for (int j = 0; j < height / 2 - 5; j++)
             {
                 for (float r = 0f; r < 360f; r++)
                 {
-                    int x = (int)(25 + i * Math.Cos(r));
+                    int x = (int)(width / 2 + i * Math.Cos(r));
                     int y = (int)((height / 2 - 5) + j * Math.Sin(r));
                     room[x, y] = ID.Empty;
                 }
