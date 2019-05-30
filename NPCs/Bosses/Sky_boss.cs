@@ -76,7 +76,7 @@ namespace ArchaeaMod.NPCs.Bosses
         private int sendIndex;
         private float angle;
         private Projectile[] orbs = new Projectile[7];
-        private Projectile[] flames = new Projectile[5];
+        private Projectile[] flames = new Projectile[6];
         public override bool PreAI()
         {
             if (!init)
@@ -139,7 +139,7 @@ namespace ArchaeaMod.NPCs.Bosses
             {
                 if (npc.alpha > 0)
                     npc.alpha -= 255 / 60;
-                if (timer < 600 && !attack)
+                if (timer < 600)
                 {
                     if (timer % 150 == 0)
                         move = ArchaeaNPC.FindAny(npc, target(), false);
@@ -165,7 +165,6 @@ namespace ArchaeaMod.NPCs.Bosses
                 }
                 if (index == 6)
                     attack = false;
-
             }
             else
             {
@@ -173,6 +172,7 @@ namespace ArchaeaMod.NPCs.Bosses
                 angle = ArchaeaNPC.RandAngle();
                 SyncNPC(false, false);
             }
+            
             if (fade && npc.position != npc.oldPosition || npc.velocity.X < 0f && npc.oldVelocity.X >= 0f || npc.velocity.X > 0f && npc.oldVelocity.X <= 0f || npc.velocity.Y < 0f && npc.oldVelocity.Y >= 0f || npc.velocity.Y > 0f && npc.oldVelocity.Y <= 0f)
                 SyncNPC();
         }
@@ -192,6 +192,11 @@ namespace ArchaeaMod.NPCs.Bosses
                     NetMessage.SendData(MessageID.SyncProjectile, -1, -1, null, flames[i].whoAmI);
             }
             return true;
+        }
+
+        public override void NPCLoot()
+        {
+            Item.NewItem(npc.Center, mod.ItemType<Items.n_Staff>());
         }
 
         private void SyncNPC()

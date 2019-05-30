@@ -30,6 +30,7 @@ namespace ArchaeaMod.NPCs.Bosses
             npc.npcSlots = maxParts;
             bodyType = mod.NPCType<Magnoliac_body>();
             tailType = mod.NPCType<Magnoliac_tail>();
+            bossBag = mod.ItemType<Merged.Items.magno_treasurebag>();
         }
         public override int maxParts
         {
