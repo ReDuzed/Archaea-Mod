@@ -98,7 +98,7 @@ namespace ArchaeaMod
             {
                 if (Main.netMode == 0)
                 {
-                    Main.NewText("To enter commands, input [Tab] (instead of Enter)", Color.LightBlue);
+                    Main.NewText("To enter commands, input [Tab] (instead of Enter), [F2] for item spawning using chat search via item name, [F3] for NPC debug and balancing", Color.LightBlue);
                     Main.NewText("Commands: /list 'npcs' 'items1' 'items2' 'items3', /npc [name], /npc 'strike', /item [name], /spawn, /day, /night, /rain 'off' 'on', hold [Left Control] and click to go to mouse", textColor);
                 }
                 if (Main.netMode == 2)
@@ -151,6 +151,7 @@ namespace ArchaeaMod
                     {
                         Main.NewText("Commands: /list 'npcs' 'items1' 'items2' 'items3', /npc [name], /npc 'strike', /item [name], /spawn, /day, /night, /rain 'off' 'on', hold Left Control and click to go to mouse", textColor);
                         Main.NewText("Press [F2] and type an item name in chat, then hover over item icon", textColor);
+                        Main.NewText("[F3] for NPC debug and balancing", textColor);
                     }
                 }
             }
@@ -251,7 +252,11 @@ namespace ArchaeaMod
                         if (enteredCommand)
                             foreach (NPC npc in Main.npc)
                                 if (npc.active && !npc.friendly && npc.life > 0)
+                                {
                                     npc.StrikeNPC(npc.lifeMax, 0f, 1, true);
+                                    if (Main.netMode != 0)
+                                        NetMessage.SendData(MessageID.StrikeNPC, -1, -1, null, npc.whoAmI);
+                                }
                     }
                 }
                 if (chat.StartsWith("/item"))
@@ -587,7 +592,8 @@ namespace ArchaeaMod
                     classChoice = ArchaeaWorld.classes[ArchaeaWorld.playerIDs.IndexOf(playerUID)];
                 OptionsUI.MainOptions(drawInfo.drawPlayer);
             }
-            DarkenedVision();
+            if (!Main.hardMode)
+                DarkenedVision();
             if (debugMenu)
                 DebugMenu();
             if (spawnMenu)
@@ -721,15 +727,17 @@ namespace ArchaeaMod
                         }
                         float randX = Main.rand.NextFloat(player.position.X - 300, player.position.X + 300);
                         float Y = player.position.Y - 100;
-                        int n = NPC.NewNPC((int)randX, (int)Y, (int)vars[0], 0);
-                        Main.npc[n].whoAmI = n;
-                        Main.npc[n].lifeMax = (int)vars[1];
-                        Main.npc[n].life = (int)vars[1];
-                        Main.npc[n].defense = (int)vars[2];
-                        Main.npc[n].damage = (int)vars[3];
-                        Main.npc[n].knockBackResist = vars[4];
                         if (Main.netMode != 0)
-                            NetHandler.Send(Packet.SpawnNPC, 256, -1, n, 0f, 0f, 1);
+                            NetHandler.Send(Packet.SpawnNPC, -1, -1, (int)vars[0], vars[1], vars[2], (int)vars[3], false, vars[4], Main.MouseWorld.X, Main.MouseWorld.Y);
+                        else
+                        {
+                            int n = NPC.NewNPC((int)randX, (int)Y, (int)vars[0], 0);
+                            Main.npc[n].lifeMax = (int)vars[1];
+                            Main.npc[n].life = (int)vars[1];
+                            Main.npc[n].defense = (int)vars[2];
+                            Main.npc[n].damage = (int)vars[3];
+                            Main.npc[n].knockBackResist = vars[4];
+                        }
                     }
                 }
                 b.Draw();

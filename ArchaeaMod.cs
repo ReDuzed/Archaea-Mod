@@ -71,7 +71,7 @@ namespace ArchaeaMod
         {
             get { return ArchaeaMain.getMod; }
         }
-        public static void Send(byte type, int toWho = -1, int fromWho = -1, int i = 0, float f = 0f, float f2 = 0f, int i2 = 0, bool b = false, float f3 = 0f)
+        public static void Send(byte type, int toWho = -1, int fromWho = -1, int i = 0, float f = 0f, float f2 = 0f, int i2 = 0, bool b = false, float f3 = 0f, float f4 = 0f, float f5 = 0f)
         {
             ModPacket packet = mod.GetPacket();
             packet.Write(type);
@@ -81,6 +81,8 @@ namespace ArchaeaMod
             packet.Write(i2);
             packet.Write(b);
             packet.Write(f3);
+            packet.Write(f4);
+            packet.Write(f5);
             packet.Send(toWho, fromWho);
         }
         public static void Receive(BinaryReader reader)
@@ -95,6 +97,8 @@ namespace ArchaeaMod
             int i = reader.ReadInt32();
             bool b = reader.ReadBoolean();
             float f3 = reader.ReadSingle();
+            float f4 = reader.ReadSingle();;
+            float f5 = reader.ReadSingle();
             switch (type)
             {
                 case Packet.WorldTime:
@@ -103,7 +107,19 @@ namespace ArchaeaMod
                     NetMessage.SendData(7, -1, -1, null);
                     break;
                 case Packet.SpawnNPC:
-                    if (!b)
+                    if (f5 != 0f)
+                    {
+                        n = NPC.NewNPC((int)f4, (int)f5, t, 0);
+                        Main.npc[n].whoAmI = n;
+                        Main.npc[n].lifeMax = (int)f;
+                        Main.npc[n].life = (int)f;
+                        Main.npc[n].defense = (int)f2;
+                        Main.npc[n].damage = i;
+                        Main.npc[n].knockBackResist = f3;
+                        NetMessage.SendData(23, -1, -1, null, n);
+                        return;
+                    }
+                    else if (!b)
                     {
                         n = NPC.NewNPC((int)f, (int)f2, t);
                         Main.npc[n].whoAmI = n;
@@ -155,13 +171,21 @@ namespace ArchaeaMod
                     break;
                 case Packet.Debug:
                     if (Main.netMode == 2)
-                        Send(Packet.Debug, t, -1, t);
+                        Send(Packet.Debug, t, -1, t, f);
                     else
                     {
                         if (t == Main.LocalPlayer.whoAmI)
                         {
                             var modPlayer = Main.player[t].GetModPlayer<ArchaeaPlayer>();
-                            modPlayer.debugMenu = !modPlayer.debugMenu;
+                            switch ((int)f)
+                            {
+                                case 0:
+                                    modPlayer.debugMenu = !modPlayer.debugMenu;
+                                    break;
+                                case 1:
+                                    modPlayer.spawnMenu = !modPlayer.spawnMenu;
+                                    break;
+                            }
                         }
                     }
                     break;
