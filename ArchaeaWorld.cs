@@ -63,6 +63,10 @@ namespace ArchaeaMod
         {
             get { return (ushort)getMod.TileType<c_crystal2x2>(); }
         }
+        public static ushort crystalLarge
+        {
+            get { return (ushort)getMod.TileType<Tiles.c_crystal_large>(); }
+        }
         public static ushort magnoBrickWall
         {
             get { return (ushort)getMod.WallType<magno_brick>(); }
@@ -344,6 +348,7 @@ namespace ArchaeaMod
             nearMusicBox = tileCounts[mod.TileType<Tiles.music_boxes>()] != 0;
         }
         public bool cordonBounds = false;
+        private bool spawnedCrystals;
         public static int worldID;
         public static List<int> classes = new List<int>();
         public static List<int> playerIDs = new List<int>();
@@ -353,7 +358,8 @@ namespace ArchaeaMod
                 { "m_downed", downedMagno },
                 { "First", first },
                 { "Classes", classes },
-                { "IDs", playerIDs }
+                { "IDs", playerIDs },
+                { "Crystals", spawnedCrystals }
             };
         }
         public override void Load(TagCompound tag)
@@ -362,6 +368,7 @@ namespace ArchaeaMod
             first = tag.GetBool("First");
             classes = tag.Get<List<int>>("Classes");
             playerIDs = tag.Get<List<int>>("IDs");
+            spawnedCrystals = tag.GetBool("Crystals");
         }
         private bool begin;
         private bool first;
@@ -406,6 +413,24 @@ namespace ArchaeaMod
                 //s.wallID = magnoBrickWall;
                 //Player player = Main.LocalPlayer;
                 //s.MagnoHouse(new Vector2(player.position.X / 16, player.position.Y / 16));
+            }
+            if (Main.hardMode && !spawnedCrystals)
+            {
+                t = new Treasures();
+                int place = 0;
+                int width = Main.maxTilesX - 100;
+                int height = Main.maxTilesY - 100;
+                Vector2[] any = Treasures.FindAll(new Vector2(100, 100), width, height, false, new ushort[] { magnoStone });
+                foreach (Vector2 floor in any)
+                {
+                    if (floor != Vector2.Zero)
+                    {
+                        int i = (int)floor.X;
+                        int j = (int)floor.Y;
+                        t.PlaceTile(i, j, crystalLarge, true, false, 8);
+                    }
+                }
+                spawnedCrystals = true;
             }
         }
         public static bool Inbounds(int i, int j)

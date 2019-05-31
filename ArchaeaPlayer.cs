@@ -606,22 +606,24 @@ namespace ArchaeaMod
         private List<int> id = new List<int>();
         private void DebugMenu()
         {
-            if (!init)
+            if (!init || id == null || id.Count == 0 || name == null || name.Count == 0)
             {
+                name.Clear();
+                id.Clear();
                 for (int i = 0; i < Main.itemTexture.Length; i++)
                 {
                     int item = Item.NewItem(Vector2.Zero, i, 1);
                     name.Add(Main.item[item].Name);
                     id.Add(i);
-                    Main.item[item].active = false;
+                    if (item < Main.item.Length)
+                        Main.item[item].active = false;
                 }
                 init = true;
             }
             Func<string, Texture2D[]> search = delegate(string Name)
             {
                 List<Texture2D> t = new List<Texture2D>();
-                t.Clear();
-                if (Name.Length > 2)
+                if (Name.Length > 2 && name != null && name.Count > 0)
                 {
                     for (int i = 0; i < name.Count; i++)
                     {
@@ -631,27 +633,30 @@ namespace ArchaeaMod
                         }
                     }
                 }
-                else t.Add(Main.magicPixel);
+                t.Add(Main.magicPixel);
                 return t.ToArray();
             };
-            Texture2D[] array;
-            if ((array = search(Main.chatText)).Length > 0 && array[0] != Main.magicPixel)
+            if (Main.chatText != null && Main.chatText.Length > 2)
             {
-                int index = Main.itemTexture.ToList().IndexOf(array[0]);
-                int x = 20;
-                int y = 112;
-                sb.Draw(array[0], new Vector2(x, y), Color.White);
-                sb.DrawString(Main.fontMouseText, string.Format("{0} {1}", name[index], id[index]), new Vector2(x + 50, y + 4), Color.White);
-
-                Rectangle grab = new Rectangle(x, y, 48, 48);
-                if (grab.Contains(Main.MouseScreen.ToPoint()))
+                Texture2D[] array = search(Main.chatText);
+                if (array != null && array.Length > 0 && array[0] != Main.magicPixel)
                 {
-                    sb.DrawString(Main.fontMouseText, "Left/Right click", new Vector2(x, y + 50), Color.White);
-                    if (LeftClick() || RightHold())
+                    int index = Main.itemTexture.ToList().IndexOf(array[0]);
+                    int x = 20;
+                    int y = 112;
+                    sb.Draw(array[0], new Vector2(x, y), Color.White);
+                    sb.DrawString(Main.fontMouseText, string.Format("{0} {1}", name[index], id[index]), new Vector2(x + 50, y + 4), Color.White);
+
+                    Rectangle grab = new Rectangle(x, y, 48, 48);
+                    if (grab.Contains(Main.MouseScreen.ToPoint()))
                     {
-                        int t = Item.NewItem(player.Center, index);
-                        if (Main.netMode != 0)
-                            NetMessage.SendData(MessageID.SyncItem, -1, -1, null, t);
+                        sb.DrawString(Main.fontMouseText, "Left/Right click", new Vector2(x, y + 50), Color.White);
+                        if (LeftClick() || RightHold())
+                        {
+                            int t = Item.NewItem(player.Center, index);
+                            if (Main.netMode != 0)
+                                NetMessage.SendData(MessageID.SyncItem, -1, -1, null, t);
+                        }
                     }
                 }
             }
@@ -667,7 +672,7 @@ namespace ArchaeaMod
             int y = 180;
             int width = 300;
             int height = 106;
-            if (!initMenu || label == null || input == null || button == null)
+            if (!initMenu)
             {
                 label = new string[]
                 {
