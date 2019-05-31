@@ -391,6 +391,7 @@ namespace ArchaeaMod
                 {
                     //s = new Structures.Magno();
                     //t = new Treasures();
+                    /*
                     Vector2 position;
                     do
                     {
@@ -398,7 +399,7 @@ namespace ArchaeaMod
                     } while (position.X < Main.spawnTileX + 150 && position.X > Main.spawnTileX - 150);
                     var s = new Structures(position, skyBrick, skyBrickWall);
                     s.InitializeFort();
-                    begin = true;
+                    begin = true;*/
                 }
                 //s.Initialize();
                 //s.tileID = magnoBrick;

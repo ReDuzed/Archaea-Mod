@@ -166,10 +166,12 @@ namespace ArchaeaMod
                         "Mimic",
                         "Sky_1",
                         "Sky_2",
+                        "Sky_3",
                         "Slime_Itchy",
                         "Slime_Mercurial",
                         "Magnoliac_head",
-                        "Sky_boss"
+                        "Sky_boss",
+                        "Sky_boss_legacy"
                     };
                     string[] items1 = new string[]
                     {
@@ -665,7 +667,7 @@ namespace ArchaeaMod
             int y = 180;
             int width = 300;
             int height = 106;
-            if (!initMenu)
+            if (!initMenu || label == null || input == null || button == null)
             {
                 label = new string[]
                 {
