@@ -114,6 +114,14 @@ namespace ArchaeaMod.NPCs
                 return true;
             return base.CheckActive(npc);
         }
+        public override void SetupShop(int type, Chest shop, ref int nextSlot)
+        {
+            if (type == NPCID.Painter)
+            {
+                if (!Main.dayTime)
+                    shop.item[nextSlot].SetDefaults(mod.ItemType<Items.Tiles.m_biomepainting>());
+            }
+        }
     }
     public class ArchaeaNPC : GlobalNPC
     {
@@ -318,7 +326,7 @@ namespace ArchaeaMod.NPCs
                     distance[k] = Vector2.Distance(Main.player[k].position, npc.position);
                 return Main.player[indices[distance.ToList().IndexOf(distance.Min())]];
             }
-            return null;
+            return Main.player[Main.myPlayer];
         }
 
         public static Vector2 AngleToSpeed(float angle, float amount = 2f)

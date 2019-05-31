@@ -58,28 +58,32 @@ namespace ArchaeaMod.NPCs
                 npc.target = player.whoAmI;
                 return player;
             }
-            else return Main.player[npc.target];
+            else return Main.player[Main.myPlayer];
         }
         private bool init;
+        private Vector2 newPosition;
         public override void AI()
         {
             if (!init)
             {
                 pathing = 1;
-                if (Main.tile[(int)npc.position.X / 16, (int)npc.position.Y / 16].wall != ArchaeaWorld.skyBrickWall)
+                int i = (int)npc.position.X / 16;
+                int j = (int)npc.position.Y / 16;
+                if (ArchaeaWorld.Inbounds(i, j) && Main.tile[i, j].wall != ArchaeaWorld.skyBrickWall)
                 {
-                    Vector2 newPosition = ArchaeaNPC.FindAny(npc, target(), true, 800);
+                    newPosition = ArchaeaNPC.FindAny(npc, target(), true, 800);
                     if (newPosition != Vector2.Zero)
                     {
-                        npc.position = newPosition;
                         npc.netUpdate = true;
+                        if (Main.netMode == 0)
+                            npc.position = newPosition;
                     }
                     else return;
                 }
                 init = true;
             }
             if (npc.alpha > 0)
-                npc.alpha -= (int)(1f / 30f);
+                npc.alpha -= 5;
             if (timer++ > 600)
             {
                 timer = 0;
@@ -137,6 +141,12 @@ namespace ArchaeaMod.NPCs
                     NetMessage.SendData(MessageID.SyncProjectile, -1, -1, null, proj[projIndex].whoAmI);
                 projIndex++;
             }
+        }
+        public override void OnHitPlayer(Player target, int damage, bool crit)
+        {
+            target.AddBuff(BuffID.Darkness, 480);
+            if (Main.netMode == 2)
+                NetMessage.SendData(MessageID.AddPlayerBuff, target.whoAmI, -1, null);
         }
 
         private bool FacingWall()
@@ -200,6 +210,20 @@ namespace ArchaeaMod.NPCs
         {
             if (Main.netMode == 2)
                 npc.netUpdate = true;
+        }
+        private bool findWall;
+        public override void SendExtraAI(System.IO.BinaryWriter writer)
+        {
+            if (!findWall)
+               writer.WriteVector2(newPosition);
+        }
+        public override void ReceiveExtraAI(System.IO.BinaryReader reader)
+        {
+            if (!findWall)
+            {
+                npc.position = reader.ReadVector2();
+                findWall = true;
+            }
         }
     }
 }

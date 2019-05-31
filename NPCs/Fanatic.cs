@@ -58,13 +58,13 @@ namespace ArchaeaMod.NPCs
             int attackTime = 180 + 90 * maxAttacks;
             if (timer++ > 60 + attackTime)
                 timer = 0;
-            ArchaeaNPC.SlowDown(ref npc.velocity);
+            ArchaeaNPC.SlowDown(ref npc.velocity, 0.1f);
             if (!init)
             {
                 npc.target = ArchaeaNPC.FindClosest(npc, true).whoAmI;
                 SyncNPC(npc.position.X, npc.position.Y);
                 dustType = 6;
-                var dusts = ArchaeaNPC.DustSpread(npc.Center, dustType, 10);
+                var dusts = ArchaeaNPC.DustSpread(npc.Center, 1, 1, dustType, 10);
                 foreach (Dust d in dusts)
                     d.noGravity = true;
                 init = true;
@@ -85,7 +85,7 @@ namespace ArchaeaMod.NPCs
                     if (move != Vector2.Zero)
                     {
                         SyncNPC(move.X, move.Y);
-                        var dusts = ArchaeaNPC.DustSpread(npc.Center, npc.width / 2, npc.height / 2, dustType, 10, 2.4f);
+                        var dusts = ArchaeaNPC.DustSpread(npc.Center - new Vector2(npc.width / 4, npc.height / 4), npc.width / 2, npc.height / 2, dustType, 10, 2.4f);
                         foreach (Dust d in dusts)
                             d.noGravity = true;
                         fade = false;
@@ -112,11 +112,6 @@ namespace ArchaeaMod.NPCs
             Main.projectile[proj].timeLeft = 300;
             Main.projectile[proj].friendly = false;
             Main.projectile[proj].tileCollide = false;
-            if (Main.netMode == 2)
-            {
-                Main.projectile[proj].whoAmI = proj;
-                NetMessage.SendData(MessageID.SyncProjectile, -1, -1, null, proj);
-            }
             scale = 0.2f;
         }
         public void OrbGrow()
@@ -129,14 +124,17 @@ namespace ArchaeaMod.NPCs
         }
         public override bool? DrawHealthBar(byte hbPosition, ref float scale, ref Vector2 position)
         {
-            return npc.alpha == 0;
+            return npc.alpha < 20;
         }
 
         public void SyncNPC(float x, float y)
         {
-            if (Main.netMode == 2)
+            if (Main.netMode != 0)
                 npc.netUpdate = true;
-            else npc.position = new Vector2(x, y);
+            else
+            {
+                npc.position = new Vector2(x, y);
+            }
         }
         public override void SendExtraAI(BinaryWriter writer)
         {
@@ -144,9 +142,7 @@ namespace ArchaeaMod.NPCs
         }
         public override void ReceiveExtraAI(BinaryReader reader)
         {
-            var vector2 = reader.ReadVector2();
-            if (vector2 != Vector2.Zero)
-                npc.position = reader.ReadVector2();
+            npc.position = reader.ReadVector2();
         }
 
         private int frame;

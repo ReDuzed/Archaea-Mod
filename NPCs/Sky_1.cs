@@ -39,17 +39,21 @@ namespace ArchaeaMod.NPCs
         private float oldX;
         private Vector2 idle;
         private Vector2 upper;
+        private Vector2 newPosition;
         public override bool PreAI()
         {
             if (!init)
             {
-                if (Main.tile[(int)npc.position.X / 16, (int)npc.position.Y / 16].wall != ArchaeaWorld.skyBrickWall)
+                int i = (int)npc.position.X / 16;
+                int j = (int)npc.position.Y / 16;
+                if (ArchaeaWorld.Inbounds(i, j) && Main.tile[i, j].wall != ArchaeaWorld.skyBrickWall)
                 {
-                    Vector2 newPosition = ArchaeaNPC.FindAny(npc, target(), true, 800);
+                    newPosition = ArchaeaNPC.FindAny(npc, target(), true, 800);
                     if (newPosition != Vector2.Zero)
                     {
-                        npc.position = newPosition;
                         npc.netUpdate = true;
+                        if (Main.netMode == 0)
+                            npc.position = newPosition;
                     }
                     else return false;
                 }
@@ -87,6 +91,12 @@ namespace ArchaeaMod.NPCs
         {
             return npc.alpha == 0;
         }
+        public override void OnHitPlayer(Player target, int damage, bool crit)
+        {
+            target.AddBuff(BuffID.Darkness, 480);
+            if (Main.netMode == 2)
+                NetMessage.SendData(MessageID.AddPlayerBuff, target.whoAmI, -1, null);
+        }
 
         private void SyncNPC()
         {
@@ -107,13 +117,21 @@ namespace ArchaeaMod.NPCs
                 npc.netUpdate = true;
             this.attack = attack;
         }
+        private bool foundWall;
         public override void SendExtraAI(BinaryWriter writer)
         {
+            if (!foundWall)
+                writer.WriteVector2(newPosition);
             writer.WriteVector2(move);
             writer.Write(attack);
         }
         public override void ReceiveExtraAI(BinaryReader reader)
         {
+            if (!foundWall)
+            {
+                npc.position = reader.ReadVector2();
+                foundWall = true;
+            }
             move = reader.ReadVector2();
             attack = reader.ReadBoolean();
         }
