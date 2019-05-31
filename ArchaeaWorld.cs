@@ -824,6 +824,7 @@ namespace ArchaeaMod
                 Door = 6,
                 Decoration = 7,
                 Furniture = 8,
+                
                 Useful = 9,
                 Lamp = 10,
                 Chest = 11,
@@ -833,7 +834,8 @@ namespace ArchaeaMod
                 Wire = 15,
                 Window = 16,
                 Light = 17,
-                Dark = 18;
+                Dark = 18,
+                WallHanging = 19;
         }
         class RoomID
         {
@@ -1196,6 +1198,8 @@ namespace ArchaeaMod
                             }
                             goto case RoomID.Lighted;
                         case RoomID.Decorated:
+                            if (WorldGen.genRand.NextFloat() > 0.67f)
+                                fort[index][m, n] = ID.WallHanging;
                             for (int t = 0; t < 4; t++)
                             {
                                 int ground = q + WorldGen.genRand.Next(1, 11);
@@ -1544,6 +1548,9 @@ namespace ArchaeaMod
                         case ID.Dark:
                             tile.type = ArchaeaWorld.skyBrick;
                             goto case -1;
+                        case ID.WallHanging:
+                            WorldGen.Place3x2Wall(m, n, TileID.WeaponsRack, 0);
+                            break;
                     }
                 }
         }
@@ -2365,6 +2372,24 @@ namespace ArchaeaMod
                         Main.tile[(int)(minerPos.X / 16) - 3, (int)(minerPos.Y / 16)].active(false);
                         Main.tile[(int)(minerPos.X / 16), (int)(minerPos.Y / 16) + 3].active(false);
                         Main.tile[(int)(minerPos.X / 16), (int)(minerPos.Y / 16) - 3].active(false);
+                    }
+                    if (WorldGen.genRand.NextFloat() > 0.5f)
+                        Main.tile[(int)minerPos.X / 16, (int)minerPos.Y / 16].wall = ArchaeaWorld.magnoCaveWall;
+                }
+            }
+        }
+        private void CaveWalls(int i, int j)
+        {
+            if (WorldGen.genRand.NextFloat() > 0.50f)
+            {
+                int radius = WorldGen.genRand.Next(8, 24);
+                for (int n = 0; n < radius; n++)
+                {
+                    for (float r = 0f; r < Math.PI * 2; r += new Draw().radians(n))
+                    {
+                        float cos = i + (float)(n * (Math.Cos(r)));
+                        float sine = j + (float)(n * (Math.Sin(r)));
+                        Main.tile[(int)cos, (int)sine].wall = ArchaeaWorld.magnoCaveWall;
                     }
                 }
             }
