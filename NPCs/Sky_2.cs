@@ -50,9 +50,13 @@ namespace ArchaeaMod.NPCs
             get { return (int)npc.ai[2]; }
             set { npc.ai[2] = value; }
         }
+        private Player npcTarget
+        {
+            get { return Main.player[npc.target]; }
+        }
         public Player target()
         {
-            Player player = ArchaeaNPC.FindClosest(npc, false, 500);
+            Player player = ArchaeaNPC.FindClosest(npc, false, 1000);
             if (player != null && player.active && !player.dead)
             {
                 npc.target = player.whoAmI;
@@ -82,6 +86,8 @@ namespace ArchaeaMod.NPCs
                 }
                 init = true;
             }
+            if (!ArchaeaWorld.Inbounds((int)npc.position.X / 16, (int)npc.position.Y / 16))
+                return;
             if (npc.alpha > 0)
                 npc.alpha -= 5;
             if (timer++ > 600)
@@ -159,6 +165,10 @@ namespace ArchaeaMod.NPCs
             int y = (int)npc.position.Y;
             return Collision.SolidTiles(x, x + npc.width, y, y + npc.height + 4);
         }
+        private bool canSeeUpgraded()
+        {
+            return Collision.CanHitLine(npc.position, npc.width, npc.height, npcTarget.position, npcTarget.width, npcTarget.height);
+        }
         private bool canSee()
         {
             Vector2 line;
@@ -167,9 +177,12 @@ namespace ArchaeaMod.NPCs
                 line = npc.Center + ArchaeaNPC.AngleToSpeed(ArchaeaNPC.AngleTo(npc, target()), k);
                 int i = (int)line.X / 16;
                 int j = (int)line.Y / 16;
-                Tile tile = Main.tile[i, j];
-                if (tile.active() && Main.tileSolid[tile.type])
-                    return false;
+                if (ArchaeaWorld.Inbounds(i, j))
+                {
+                    Tile tile = Main.tile[i, j];
+                    if (tile.active() && Main.tileSolid[tile.type])
+                        return false;
+                }
             }
             return true;
         }

@@ -353,12 +353,12 @@ namespace ArchaeaMod.NPCs
         {
             return (float)Math.Atan2(to.Y - from.Y, to.X - from.X);
         }
-        public static Dust[] DustSpread(Vector2 v, int width = 1, int height = 1, int dustType = 6, int total = 10, float scale = 1f, Color color = default(Color), bool noGravity = false)
+        public static Dust[] DustSpread(Vector2 v, int width = 1, int height = 1, int dustType = 6, int total = 10, float scale = 1f, Color color = default(Color), bool noGravity = false, float spreadSpeed = 8f)
         {
             Dust[] dusts = new Dust[total];
             for (int k = 0; k < total; k++)
             {
-                Vector2 speed = ArchaeaNPC.AngleToSpeed(ArchaeaNPC.RandAngle(), 8f);
+                Vector2 speed = ArchaeaNPC.AngleToSpeed(ArchaeaNPC.RandAngle(), spreadSpeed);
                 dusts[k] = Dust.NewDustDirect(v + speed, width, height, dustType, speed.X, speed.Y, 0, color, scale);
                 dusts[k].noGravity = noGravity;
             }

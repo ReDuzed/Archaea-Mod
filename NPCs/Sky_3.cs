@@ -30,13 +30,16 @@ namespace ArchaeaMod.NPCs
             npc.defense = 10;
             npc.damage = 20;
             npc.value = 150;
+            npc.alpha = 255;
             npc.knockBackResist = 0f;
+            npc.noGravity = true;
+            npc.noTileCollide = true;
             npc.lavaImmune = true;
         }
-        private bool activated;
         private bool attack;
         private bool init;
         private bool firstTarget;
+        
         private const float rushSpeed = 12f;
         private const float slowRate = 0.1f;
         private const float rotateSpeed = 0.05f;
@@ -47,109 +50,125 @@ namespace ArchaeaMod.NPCs
             get { return (int)npc.ai[0]; }
             set { npc.ai[0] = value; }
         }
+        private int ai
+        {
+            get { return (int)npc.ai[1]; }
+            set { npc.ai[1] = value; }
+        }
+        private const int 
+            Idle = 0,
+            Activated = 1,
+            Attack = 2;
+        private Player npcTarget
+        {
+            get { return Main.player[npc.target]; }
+        }
         public Player target()
         {
-            Player player = ArchaeaNPC.FindClosest(npc, firstTarget);
+            Player player = ArchaeaNPC.FindClosest(npc, firstTarget, 800);
             firstTarget = false;
             if (player != null && player.active && !player.dead)
             {
                 npc.target = player.whoAmI;
+                npc.netUpdate = true;
                 return player;
             }
             else return Main.player[npc.target];
         }
-        public override bool PreAI()
+        public override void AI()
         {
-            npc.immortal = !activated;
-            npc.dontTakeDamage = !activated;
-            npc.noGravity = activated;
-            npc.noTileCollide = activated;
-            npc.color = !activated ? Color.Gray : Color.White;
+            time++;
             if (!init)
             {
                 int i = (int)npc.position.X / 16;
                 int j = (int)npc.position.Y / 16;
                 if (ArchaeaWorld.Inbounds(i, j) && Main.tile[i, j].wall != ArchaeaWorld.skyBrickWall)
                 {
-                    newPosition = ArchaeaNPC.FindAny(npc, target(), true, 800);
+                    newPosition = ArchaeaNPC.FindAny(npc, ArchaeaNPC.FindClosest(npc, true), true, 800);
                     if (newPosition != Vector2.Zero)
                     {
                         npc.netUpdate = true;
-                        if (Main.netMode == 0)
-                            npc.position = newPosition;
                         init = true;
                     }
-                    else return false;
                 }
             }
-            return activated;
-        }
-        public override void AI()
-        {
-            if (time++ > 300)
+            if (newPosition != Vector2.Zero && ai == Idle)
+                npc.position = newPosition;
+            if (time > 150)
+            {
+                if (npc.alpha > 12)
+                    npc.alpha -= 12;
+                else npc.alpha = 0;
+            }
+            if (npc.target == 255)
+            {
+                if (npc.life < npc.lifeMax)
+                    npc.TargetClosest();
+                return;
+            }
+            if (time > 300)
             {
                 time = 0;
-                attack = true;
-                npc.netUpdate = true;
+                ai = Attack;
             }
             if (time == 240)
-            {
-                tracking = target().Center;
-                npc.netUpdate = true;
-            }
-            if (attack)
+                tracking = npcTarget.Center;
+            if (ai == Attack)
             {
                 npc.velocity += ArchaeaNPC.AngleToSpeed(npc.AngleTo(tracking), rushSpeed);
+                ai = Activated;
                 npc.netUpdate = true;
-                attack = false;
             }
-            ArchaeaNPC.SlowDown(ref npc.velocity, slowRate);
+            else
+            {
+                ArchaeaNPC.SlowDown(ref npc.velocity, 0.2f);
+                if (time % 45 == 0 && time != 0)
+                    npc.velocity = Vector2.Zero;
+            }
             if (npc.velocity.X >= npc.oldVelocity.X || npc.velocity.X < npc.oldVelocity.X || npc.velocity.Y >= npc.oldVelocity.Y || npc.velocity.Y < npc.oldVelocity.Y)
                 npc.netUpdate = true;
-            if (npc.Center.X <= target().Center.X)
+            if (npc.Center.X <= npcTarget.Center.X)
             {
                 float angle = (float)Math.Round(Math.PI * 0.2f, 1);
                 if (npc.rotation > angle)
-                   npc.rotation -= rotateSpeed;
+                npc.rotation -= rotateSpeed;
                 else npc.rotation += rotateSpeed;
             }
             else
             {
                 float angle = (float)Math.Round((Math.PI * 0.2f) * -1, 1);
                 if (npc.rotation > angle)
-                   npc.rotation -= rotateSpeed;
+                npc.rotation -= rotateSpeed;
                 else npc.rotation += rotateSpeed;
+            }
+            if (ai == Idle && npc.Distance(npcTarget.Center) < 64f)
+            {
+                ArchaeaNPC.DustSpread(npc.position, npc.width, npc.height, DustID.Stone, 5, 1.2f);
+                npc.TargetClosest();
+                ai = Activated;
+                npc.netUpdate = true;
             }
         }
         public override void OnHitPlayer(Player target, int damage, bool crit)
         {
-            if (!activated)
-                ArchaeaNPC.DustSpread(npc.position, npc.width, npc.height, DustID.Stone, 5, 1.2f);
             target.AddBuff(BuffID.Darkness, 480);
             if (Main.netMode == 2)
                 NetMessage.SendData(MessageID.AddPlayerBuff, target.whoAmI, -1, null);
-            npc.target = target.whoAmI;
-            npc.netUpdate = true;
-            activated = true;
+        }
+        public override bool? DrawHealthBar(byte hbPosition, ref float scale, ref Vector2 position)
+        {
+            return npc.alpha == 0;
         }
 
-        private bool findWall;
         public override void SendExtraAI(BinaryWriter writer)
         {
-            if (!findWall)
-                writer.WriteVector2(newPosition);
+            writer.WriteVector2(newPosition);
             writer.WriteVector2(tracking);
-            writer.Write(activated);
         }
         public override void ReceiveExtraAI(BinaryReader reader)
         {
-            if (!findWall)
-            {
-                npc.position = reader.ReadVector2();
-                findWall = true;
-            }
+            newPosition = reader.ReadVector2();
             tracking = reader.ReadVector2();
-            activated = reader.ReadBoolean();
         }
     }
 }
