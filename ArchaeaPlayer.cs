@@ -79,12 +79,14 @@ namespace ArchaeaMod
             playerUID = tag.GetInt("PlayerID");
             if (playerUID == 0)
                 playerUID = GetHashCode();
+            classChosen = tag.GetBool("Chosen");
         }
         public override TagCompound Save()
         {
             return new TagCompound
             {
                 { "PlayerID", playerUID },
+                { "Chosen", classChosen }
             };
         }
         private bool start;
@@ -388,7 +390,7 @@ namespace ArchaeaMod
         private int boundsCheck;
         public override void PostUpdate()
         {
-            if (inBounds)
+            if (outOfBounds)
             {
                 effectTime--;
                 for (float i = 0; i < Math.PI * 2f; i += new Draw().radians(effectTime / 64f))
@@ -412,7 +414,7 @@ namespace ArchaeaMod
                     oldPosition = Vector2.Zero;
                     effectTime = maxTime;
                     boundsCheck = 0;
-                    inBounds = false;
+                    outOfBounds = false;
                 }
             }
             else
@@ -421,10 +423,14 @@ namespace ArchaeaMod
                 effectTime = maxTime;
                 boundsCheck = 0;
             }
-            if (classChoice != 0 && !classChosen)
+            if (classChoice != ClassID.None && !classChosen)
             {
-                ArchaeaWorld.playerIDs.Add(playerUID);
-                ArchaeaWorld.classes.Add(classChoice);
+                Main.NewText(playerUID + " "  + classChoice);
+                if (!ArchaeaWorld.playerIDs.Contains(playerUID))
+                {
+                    ArchaeaWorld.playerIDs.Add(playerUID);
+                    ArchaeaWorld.classes.Add(classChoice);
+                }
                 classChosen = true;
             }
         }
@@ -495,10 +501,9 @@ namespace ArchaeaMod
                 }
             }
         }
-        private bool inBounds;
+        private bool outOfBounds;
         private bool[] zones = new bool[index];
         private const int index = 12;
-        private int[] unlocked = new int[index];
         private Vector2 oldPosition;
         public void BiomeBounds()
         {
@@ -515,17 +520,17 @@ namespace ArchaeaMod
                 player.ZoneOverworldHeight,
                 player.ZoneSnow,
                 player.ZoneUndergroundDesert,
-                SkyFort
+                SkyFort,
+                MagnoBiome
             };
-            unlocked[BiomeID.Overworld] = 1;
             var modWorld = mod.GetModWorld<ArchaeaWorld>();
             if (modWorld.cordonBounds)
             {
-                for (int i = 0; i < unlocked.Length; i++)
+                for (int i = 0; i < zones.Length; i++)
                 {
                     if (zones[i])
                     {
-                        if (inBounds = !ObjectiveMet(i))
+                        if (outOfBounds = !ObjectiveMet(i))
                         {
                             if (oldPosition == Vector2.Zero)
                                 oldPosition = player.position;
@@ -533,7 +538,7 @@ namespace ArchaeaMod
                         }
                         else
                         {
-                            inBounds = false;
+                            outOfBounds = false;
                         }
                     }
                 }
@@ -541,8 +546,6 @@ namespace ArchaeaMod
         }
         private bool ObjectiveMet(int zone)
         {
-            if (unlocked[zone] == 1)
-                return true;
             switch (zone)
             {
                 case BiomeID.Beach:
@@ -856,7 +859,8 @@ namespace ArchaeaMod
                 Overworld = 8,
                 Snow = 9,
                 UGDesert = 10,
-                Fort = 11;
+                Fort = 11,
+                Magno = 12;
         }
     }
 

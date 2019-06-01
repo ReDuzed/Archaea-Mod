@@ -221,6 +221,7 @@ namespace ArchaeaMod
             SyncEntity = 9,
             Debug = 10,
             TileExplode = 11,
-            DownedMagno = 12;
+            DownedMagno = 12,
+            ModOptions = 13;
     }
 }
