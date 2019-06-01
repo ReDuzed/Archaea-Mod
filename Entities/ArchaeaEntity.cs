@@ -67,7 +67,7 @@ namespace ArchaeaMod.Entities
         {
             foreach (var e in ArchaeaEntity.entity)
             {
-                if (e != null)
+                if (e != null && e.active)
                 {
                     e.Update();
                     if (Main.netMode == 2 && e.netUpdate)
