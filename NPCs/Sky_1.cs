@@ -18,11 +18,12 @@ namespace ArchaeaMod.NPCs
         public override void SetStaticDefaults()
         {
             DisplayName.SetDefault("Resentful Spirit");
+            Main.npcFrameCount[npc.type] = 4;
         }
         public override void SetDefaults()
         {
             npc.aiStyle = -1;
-            npc.width = 48;
+            npc.width = 24;
             npc.height = 48;
             npc.lifeMax = 50;
             npc.defense = 10;
@@ -35,6 +36,12 @@ namespace ArchaeaMod.NPCs
         }
 
         private bool init;
+        private bool chosenTexture;
+        private int time
+        {
+            get { return (int)npc.ai[3]; }
+            set { npc.ai[3] = value; }
+        }
         private float upperPoint;
         private float oldX;
         private Vector2 idle;
@@ -42,6 +49,33 @@ namespace ArchaeaMod.NPCs
         private Vector2 newPosition;
         public override bool PreAI()
         {
+            if (time++ > frameCount * frameTime)
+                time = 0;
+            if (!chosenTexture)
+            {
+                int rand = Main.rand.Next(4);
+                switch (rand)
+                {
+                    case 0:
+                        break;
+                    case 1:
+                        Main.npcTexture[npc.type] = mod.GetTexture("Gores/Sky_1_1");
+                        npc.defense = 30;
+                        npc.netUpdate = true;
+                        break;
+                    case 2:
+                        Main.npcTexture[npc.type] = mod.GetTexture("Gores/Sky_1_2");
+                        npc.defense = 20;
+                        npc.netUpdate = true;
+                        break;
+                    case 3:
+                        Main.npcTexture[npc.type] = mod.GetTexture("Gores/Sky_1_3");
+                        npc.defense = 25;
+                        npc.netUpdate = true;
+                        break;
+                }
+                chosenTexture = true;
+            }
             if (!init)
             {
                 int i = (int)npc.position.X / 16;
@@ -96,6 +130,25 @@ namespace ArchaeaMod.NPCs
             target.AddBuff(BuffID.Darkness, 480);
             if (Main.netMode == 2)
                 NetMessage.SendData(MessageID.AddPlayerBuff, target.whoAmI, -1, null);
+        }
+        private int frame;
+        private int frameCount;
+        private int frameTime;
+        public override void FindFrame(int frameHeight)
+        {
+            frameTime = 7;
+            if (!Main.dedServ)
+            {
+                frameCount = Main.npcFrameCount[npc.type];
+                frameHeight = Main.npcTexture[npc.type].Height / frameCount;
+            }
+            if (time % frameTime == 0 && time != 0)
+            {
+                if (frame < frameCount - 1)
+                    frame++;
+                else frame = 0;
+            }
+            npc.frame.Y = frame * frameHeight;
         }
 
         private void SyncNPC()
