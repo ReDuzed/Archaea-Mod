@@ -272,23 +272,29 @@ namespace ArchaeaMod
         }
         public override void PostWorldGen()
         {
-            int[] types = new int[]
+            int[] t0 = new int[]
             {
                 mod.ItemType<Broadsword>(),
                 mod.ItemType<Calling>(),
                 mod.ItemType<Deflector>(),
                 mod.ItemType<Sabre>(),
-                mod.ItemType<Staff>(),
-
+                mod.ItemType<Staff>()
+            };
+            int[] t1 = new int[]
+            {
                 mod.ItemType<cinnabar_dagger>(),
                 mod.ItemType<magno_book>(),
                 mod.ItemType<magno_yoyo>(),
-                mod.ItemType<m_fossil>(),
-
+                mod.ItemType<m_fossil>()
+            };
+            int[] t2 = new int[]
+            {
                 mod.ItemType<ArchaeaMod.Merged.Items.Materials.magno_bar>(),
                 ItemID.SilverBar,
-                ItemID.GoldBar,
-
+                ItemID.GoldBar
+            };
+            int[] t3 = new int[]
+            {
                 ItemID.ArcheryPotion, 
                 ItemID.BattlePotion, 
                 ItemID.CalmingPotion, 
@@ -300,6 +306,13 @@ namespace ArchaeaMod
                 ItemID.RecallPotion, 
                 ItemID.TeleportationPotion
             };
+            int[] s0 = t0;
+            int[] s1 = t1;
+            int[] s2 = new int[]
+            {
+                mod.ItemType<ArchaeaMod.Items.Materials.r_plate>()
+            };
+            int[] s3 = t3;
             
             for (int i = 0; i < 1000; i++)
             {
@@ -310,27 +323,71 @@ namespace ArchaeaMod
                 {
                     for (int j = 0; j < 4; j++)
                     {
-                        int type = types[Main.rand.Next(types.Length)]; 
-                        chest.item[j].SetDefaults(type);
+                        int type = 0;
                         int fossils = 0; 
                         switch (j)
                         {
                             case 0:
+                                type = t0[Main.rand.Next(t0.Length)]; 
+                                chest.item[j].SetDefaults(type);
                                 break;
                             case 1:
-                                if (type == 0)
+                                type = t1[Main.rand.Next(t1.Length)]; 
+                                if (type == t1[0])
+                                {
+                                    chest.item[j].SetDefaults(t1[0]);
                                     chest.item[j].stack = Main.rand.Next(8, 15);
+                                    break;
+                                }
                                 if (fossils < 2)
                                 {
-                                    if (type == 3)
+                                    if (type == t1[3])
+                                    {
+                                        chest.item[j].SetDefaults(t1[3]);
                                         fossils++;
+                                    }
                                 }
-                                else chest.item[j].SetDefaults(types[Main.rand.Next(types.Length)]);
                                 break;
                             case 2:
+                                type = t2[Main.rand.Next(t2.Length)]; 
+                                chest.item[j].SetDefaults(type);
                                 chest.item[j].stack = Main.rand.Next(6, 13);
                                 break;
                             case 3:
+                                type = t3[Main.rand.Next(t3.Length)]; 
+                                chest.item[j].SetDefaults(type);
+                                chest.item[j].stack = Main.rand.Next(1, 4);
+                                break;
+                        }
+                    }
+                }
+                if (chest.y < Main.spawnTileY && Main.tile[chest.x, chest.y].frameX == 0)
+                {
+                    for (int j = 0; j < 4; j++)
+                    {
+                        int type = 0;
+                        switch (j)
+                        {
+                            case 0:
+                                type = s0[Main.rand.Next(s0.Length)]; 
+                                chest.item[j].SetDefaults(type);
+                                break;
+                            case 1:
+                                type = s1[Main.rand.Next(s1.Length)]; 
+                                if (type == s1[0])
+                                {
+                                    chest.item[j].SetDefaults(t1[0]);
+                                    chest.item[j].stack = Main.rand.Next(8, 15);
+                                }
+                                break;
+                            case 2:
+                                type = s2[Main.rand.Next(s2.Length)]; 
+                                chest.item[j].SetDefaults(type);
+                                chest.item[j].stack = Main.rand.Next(6, 13);
+                                break;
+                            case 3:
+                                type = s3[Main.rand.Next(s3.Length)]; 
+                                chest.item[j].SetDefaults(type);
                                 chest.item[j].stack = Main.rand.Next(1, 4);
                                 break;
                         }
@@ -341,10 +398,12 @@ namespace ArchaeaMod
         public bool MagnoBiome;
         public bool SkyFort;
         public bool nearMusicBox;
+        public bool SkyPortal;
         public override void TileCountsAvailable(int[] tileCounts)
         {
             MagnoBiome = tileCounts[magnoStone] >= 100;
             SkyFort = tileCounts[skyBrick] >= 80;
+            SkyPortal = tileCounts[mod.TileType<Tiles.sky_portal>()] != 0;
             nearMusicBox = tileCounts[mod.TileType<Tiles.music_boxes>()] != 0;
         }
         public bool cordonBounds = false;
@@ -850,7 +909,6 @@ namespace ArchaeaMod
                 Door = 6,
                 Decoration = 7,
                 Furniture = 8,
-                
                 Useful = 9,
                 Lamp = 10,
                 Chest = 11,
@@ -861,7 +919,8 @@ namespace ArchaeaMod
                 Window = 16,
                 Light = 17,
                 Dark = 18,
-                WallHanging = 19;
+                WallHanging = 19,
+                Portal = 20;
         }
         class RoomID
         {
@@ -977,6 +1036,7 @@ namespace ArchaeaMod
                     room[x, y] = ID.Empty;
                 }
             }
+            room[width / 2 - 1, height / 2 - 1] = ID.Portal;
             return room;
         }
         internal void InitIsland()
@@ -1060,6 +1120,9 @@ namespace ArchaeaMod
                             tile.active(true);
                             tile.type = TileID.Cloud;
                             break;
+                        case ID.Portal:
+                            WorldGen.Place3x3Wall(m, n, (ushort)ArchaeaMain.getMod.TileType<ArchaeaMod.Tiles.sky_portal>(), 0);
+                            goto case ID.Wall;
                     }
                 }
         }

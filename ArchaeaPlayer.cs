@@ -28,11 +28,13 @@ namespace ArchaeaMod
         #region biome
         public bool MagnoBiome;
         public bool SkyFort;
+        public bool SkyPortal;
         public override void UpdateBiomes()
         {
             ArchaeaWorld modWorld = mod.GetModWorld<ArchaeaWorld>();
             MagnoBiome = modWorld.MagnoBiome;
             SkyFort = modWorld.SkyFort;
+            SkyPortal = modWorld.SkyPortal;
         }
         public override bool CustomBiomesMatch(Player other)
         {
@@ -46,12 +48,14 @@ namespace ArchaeaMod
         {
             other.GetModPlayer<ArchaeaPlayer>(mod).MagnoBiome = MagnoBiome;
             other.GetModPlayer<ArchaeaPlayer>(mod).SkyFort = SkyFort;
+            other.GetModPlayer<ArchaeaPlayer>(mod).SkyPortal = SkyPortal;
         }
         public override void SendCustomBiomes(BinaryWriter writer)
         {
             BitsByte flag = new BitsByte();
             flag[0] = MagnoBiome;
             flag[1] = SkyFort;
+            flag[2] = SkyPortal;
             writer.Write(flag);
         }
         public override void ReceiveCustomBiomes(BinaryReader reader)
@@ -59,6 +63,7 @@ namespace ArchaeaMod
             BitsByte flag = reader.ReadByte();
             MagnoBiome = flag[0];
             SkyFort = flag[1];
+            SkyPortal = flag[2];
         }
         #endregion
         public static class ClassID
