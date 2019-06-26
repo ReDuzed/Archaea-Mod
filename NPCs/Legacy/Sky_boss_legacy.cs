@@ -17,7 +17,7 @@ namespace ArchaeaMod.NPCs.Legacy
     {
         public override bool Autoload(ref string name)
         {
-            return true;
+            return false;
         }
         public override void SetStaticDefaults()
         {
@@ -68,20 +68,20 @@ namespace ArchaeaMod.NPCs.Legacy
         private float radius = 100f;
         private float range;
         private float oldRange;
-        private Energy[] energy;
+        private Energy_legacy[] energy;
         public static Player[] targets;
         public override bool JustSpawned()
         {
             index = 0;
-            energy = new Energy[total];
+            energy = new Energy_legacy[total];
             for (double r = 0; r < Math.PI * 2d; r += Math.PI / (total / 2d))
                 if (index < total)
-                    energy[index++] = new Energy(npc, radius, (float)r);
-            Target.npc = npc;
+                    energy[index++] = new Energy_legacy(npc, radius, (float)r);
+            Target_legacy.npc = npc;
             range = 300f;
             oldRange = range;
             targets = UpdateTargets();
-            Target.type = 0;
+            Target_legacy.type = 0;
             pattern = Pattern.Idle;
             return false;
         }
@@ -90,16 +90,16 @@ namespace ArchaeaMod.NPCs.Legacy
             if (Hurt())
             {
                 range -= 25;
-                Target.range = range;
+                Target_legacy.range = range;
             }
-            foreach (Energy e in energy)
+            foreach (Energy_legacy e in energy)
             {
-                if (e.Absorb(range, new Action(Target.BeingAttacked)))
+                if (e.Absorb(range, new Action(Target_legacy.BeingAttacked)))
                 {
                     range = oldRange;
-                    Target.range = range;
+                    Target_legacy.range = range;
                     targets = UpdateTargets();
-                    Target.type = Main.rand.Next(3);
+                    Target_legacy.type = Main.rand.Next(3);
                     return true;
                 }
             }
@@ -136,7 +136,7 @@ namespace ArchaeaMod.NPCs.Legacy
             index = NPCHeadLoader.GetBossHeadSlot(ArchaeaMain.skyHead);
         }
     }
-    public class Energy
+    public class Energy_legacy
     {
         private int time;
         private int elapsed = 30;
@@ -153,7 +153,7 @@ namespace ArchaeaMod.NPCs.Legacy
         private Color color;
         private Dust[] dust = new Dust[400];
         public NPC npc;
-        public Energy(NPC npc, float radius, float rotation)
+        public Energy_legacy(NPC npc, float radius, float rotation)
         {
             this.npc = npc;
             this.radius = radius;
@@ -184,7 +184,7 @@ namespace ArchaeaMod.NPCs.Legacy
                 if (d != null)
                 {
                     d.velocity = ArchaeaNPC.AngleToSpeed(ArchaeaNPC.AngleTo(d.position, npc.Center), 3f);
-                    Target.VelClamp(ref d.velocity, -3f, 3f, out d.velocity);
+                    Target_legacy.VelClamp(ref d.velocity, -3f, 3f, out d.velocity);
                 }
             action.Invoke();
             if (range < npc.width || total > elapsed * 12)
@@ -195,7 +195,7 @@ namespace ArchaeaMod.NPCs.Legacy
             return false;
         }
     }
-    public class Target
+    public class Target_legacy
     {
         private static int time;
         private static int elapsed = 60;
@@ -209,7 +209,7 @@ namespace ArchaeaMod.NPCs.Legacy
         private static float rotate;
         private static int index;
         public static NPC npc;
-        private static Energy[] energy = new Energy[3000];
+        private static Energy_legacy[] energy = new Energy_legacy[3000];
         public static void BeingAttacked()
         {
             foreach (Player target in Sky_boss_legacy.targets)
