@@ -85,6 +85,7 @@ namespace ArchaeaMod.NPCs.Bosses
         }
         public override void AI()
         {
+            npc.spriteDirection = 1;
             if (timer++ > 900)
             {
                 npcCounter++;
@@ -339,6 +340,7 @@ namespace ArchaeaMod.NPCs.Bosses
                 Dust.NewDust(projectile.position, projectile.width, projectile.height, DustID.Shadowflame);
             if (Main.netMode == 2 && (projectile.velocity.X < 0f && projectile.oldVelocity.X >= 0f || projectile.velocity.X > 0f && projectile.oldVelocity.X <= 0f || projectile.velocity.Y < 0f && projectile.oldVelocity.Y >= 0f || projectile.velocity.Y > 0f && projectile.oldVelocity.Y <= 0f))
                 projectile.netUpdate = true;
+            projectile.velocity.Y += 0.0917f;
         }
         public override void OnHitPlayer(Player target, int damage, bool crit)
         {
@@ -348,12 +350,12 @@ namespace ArchaeaMod.NPCs.Bosses
         }
         public override bool PreKill(int timeLeft)
         {
-            if (projectile.scale > 0f)
+            if (projectile.scale > 0.1f)
             {
                 projectile.scale -= 1f / 60f;
                 return false;
             }
-            else return true;
+            return true;
         }
         public override void Kill(int timeLeft)
         {
