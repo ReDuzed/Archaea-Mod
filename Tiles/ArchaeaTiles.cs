@@ -52,7 +52,8 @@ namespace ArchaeaMod.Tiles
                 {
                     ArchaeaWorld.crystal,
                     ArchaeaWorld.crystal2x1,
-                    ArchaeaWorld.crystal2x2
+                    ArchaeaWorld.crystal2x2,
+                    ArchaeaWorld.crystalLarge
                 };
                 for (int k = i - 8; k < i + 8; k++)
                 for (int l = j - 8; l < j + 8; l++)
@@ -78,7 +79,12 @@ namespace ArchaeaMod.Tiles
                         else if (!right.active())
                             WorldGen.PlaceTile(i, j - 1, (int)types[0], true, false, -1, 1);
                         else if (!bottom.active())
-                            WorldGen.PlaceTile(i, j - 1, Main.rand.Next(new int[] { (int)types[0], (int)types[1], (int)types[3] }), true, false, -1, 0);
+                        {
+                            if (Main.rand.NextBool())
+                                WorldGen.PlaceTile(i, j - 1, Main.rand.Next(new int[] { (int)types[0], (int)types[1], (int)types[2] }), true, false, -1, 0);
+                            else if (Main.hardMode)
+                                WorldGen.PlaceTile(i, j - 1, types[3], true, false);
+                        }
                         else if (!left.active())
                             WorldGen.PlaceTile(i, j - 1, (int)types[0], true, false, -1, 2);
                     }
