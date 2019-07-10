@@ -70,12 +70,13 @@ namespace ArchaeaMod
         {
             public const int
             None = 0,
-            All = 1,
-            Melee = 2,
+            All = 5,
+            Melee = 1,
+
             Magic = 3,
-            Ranged = 4,
-            Throwing = 5,
-            Summoner = 6;
+            Ranged = 2,
+            Throwing = -10,
+            Summoner = 4;
         }
         public int classChoice = 0;
         public int playerUID = 0;
@@ -101,12 +102,12 @@ namespace ArchaeaMod
         {
             Color textColor = Color.Yellow;
             //  ITEM TEXT and SKY FORT DEBUG GEN
-            if (!start && !Main.dedServ)
+            if (!start && !Main.dedServ && KeyPress(Keys.F1) && KeyHold(Keys.Up))
             {
                 if (Main.netMode == 0)
                 {
-                    Main.NewText("To enter commands, input [Tab] (instead of Enter), [F2] for item spawning using chat search via item name, [F3] for NPC debug and balancing", Color.LightBlue);
-                    Main.NewText("Commands: /list 'npcs' 'items1' 'items2' 'items3', /npc [name], /npc 'strike', /item [name], /spawn, /day, /night, /rain 'off' 'on', hold [Left Control] and click to go to mouse", textColor);
+                    Main.NewText("To enter commands, input [Tab + (Hold) Left Control] (instead of Enter), [F2 + LeftControl] for item spawning using chat search via item name, [F3 + LeftControl] for NPC debug and balancing", Color.LightBlue);
+                    Main.NewText("Commands: /list 'npcs' 'items1' 'items2' 'items3', /npc [name], /npc 'strike', /item [name], /spawn, /day, /night, /rain 'off' 'on', hold [Left Control + Left Alt] and click to go to mouse", textColor);
                 }
                 if (Main.netMode == 2)
                     NetMessage.BroadcastChatMessage(NetworkText.FromLiteral("Input /info and use [Tab] to list commands"), textColor);
@@ -142,7 +143,7 @@ namespace ArchaeaMod
                     }
                 }
             }
-            if (KeyHold(Keys.LeftControl) && LeftClick())
+            if (KeyHold(Keys.LeftControl) && KeyHold(Keys.LeftAlt) && LeftClick())
             {
                 if (Main.netMode == 2)
                     NetHandler.Send(Packet.TeleportPlayer, -1, -1, player.whoAmI, Main.MouseWorld.X, Main.MouseWorld.Y);
@@ -150,7 +151,7 @@ namespace ArchaeaMod
             }
             string chat = (string)Main.chatText.Clone();
             bool enteredCommand = KeyPress(Keys.Tab);
-            if (chat.StartsWith("/info"))
+            if (chat.StartsWith("/info") && KeyHold(Keys.LeftControl))
             {
                 if (enteredCommand)
                 {
@@ -162,7 +163,7 @@ namespace ArchaeaMod
                     }
                 }
             }
-            if (chat.StartsWith("/"))
+            if (chat.StartsWith("/") && KeyHold(Keys.LeftControl))
             {
                 if (chat.StartsWith("/list"))
                 {
@@ -348,13 +349,13 @@ namespace ArchaeaMod
                 Main.drawingPlayerChat = false;
                 Main.chatRelease = false;
             }
-            if (KeyPress(Keys.F2))
+            if (KeyPress(Keys.F2) && KeyHold(Keys.LeftControl))
             {
                 if (Main.netMode == 1)
                     NetHandler.Send(Packet.Debug, 256, -1, player.whoAmI);
                 else debugMenu = !debugMenu;
             }
-            if (KeyPress(Keys.F3))
+            if (KeyPress(Keys.F3) && KeyHold(Keys.LeftControl))
             {
                 if (Main.netMode == 1)
                     NetHandler.Send(Packet.Debug, 256, -1, player.whoAmI, 1f);
@@ -430,7 +431,6 @@ namespace ArchaeaMod
             }
             if (classChoice != ClassID.None && !classChosen)
             {
-                Main.NewText(playerUID + " "  + classChoice);
                 if (!ArchaeaWorld.playerIDs.Contains(playerUID))
                 {
                     ArchaeaWorld.playerIDs.Add(playerUID);
@@ -756,92 +756,6 @@ namespace ArchaeaMod
                     }
                 }
                 b.Draw();
-            }
-        }
-        sealed class TextBox
-        {
-            public bool active;
-            public string text = "";
-            public Color color
-            {
-                get { return active ? Color.DodgerBlue * 0.67f : Color.DodgerBlue * 0.33f; }
-            }
-            public Rectangle box;
-            private KeyboardState oldState;
-            private KeyboardState keyState
-            {
-                get { return Keyboard.GetState(); }
-            }
-            private SpriteBatch sb
-            {
-                get { return Main.spriteBatch; }
-            }
-            public TextBox(Rectangle box)
-            {
-                this.box = box;
-            }
-            public void UpdateInput()
-            {
-                if (active)
-                {
-                    foreach (Keys key in keyState.GetPressedKeys())
-                    {
-                        if (oldState.IsKeyUp(key))
-                        {
-                            if (key == Keys.F3)
-                                return;
-                            if (key == Keys.Back)
-                            {
-                                if (text.Length > 0)
-                                    text = text.Remove(text.Length - 1);
-                                oldState = keyState;
-                                return;
-                            }
-                            else if (key == Keys.Space)
-                                text += " ";
-                            else if (text.Length < 24)
-                            {
-                                string n = key.ToString().ToLower();
-                                if (n.StartsWith("d") && n.Length == 2)
-                                    n = n.Substring(1);
-                                text += n;
-                            }
-                        }
-                    }
-                    oldState = keyState;
-                }
-            }
-            public void DrawText()
-            {
-                sb.Draw(Main.magicPixel, box, color);
-                sb.DrawString(Main.fontMouseText, text, new Vector2(box.X + 2, box.Y + 1), Color.White);
-            }
-        }
-        sealed class Button
-        {
-            public string text = "";
-            public Color color
-            {
-                get { return box.Contains(Main.MouseScreen.ToPoint()) ? Color.DodgerBlue * 0.67f : Color.DodgerBlue * 0.33f; }
-            }
-            public Rectangle box;
-            private SpriteBatch sb
-            {
-                get { return Main.spriteBatch; }
-            }
-            public bool LeftClick()
-            {
-                return box.Contains(Main.MouseScreen.ToPoint()) && ArchaeaPlayer.LeftClick();
-            }
-            public Button(string text, Rectangle box)
-            {
-                this.text = text;
-                this.box = box;
-            }
-            public void Draw()
-            {
-                sb.Draw(Main.magicPixel, box, color);
-                sb.DrawString(Main.fontMouseText, text, new Vector2(box.X + 2, box.Y + 2), Color.White * 0.90f);
             }
         }
         public override Texture2D GetMapBackgroundImage()

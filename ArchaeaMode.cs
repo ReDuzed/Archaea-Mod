@@ -63,8 +63,8 @@ namespace ArchaeaMod.Mode
         public float totalTime;
         public override void PostUpdate()
         {
-            //if (Main.netMode == 0 && ArchaeaPlayer.KeyPress(Keys.O))
-            //    progress = !progress;
+            if (ArchaeaPlayer.KeyPress(Keys.O))
+                progress = !progress;
             totalTime += (float)Main.frameRate / 60f;
             dayCount = totalTime / (float)Main.dayLength;
         }

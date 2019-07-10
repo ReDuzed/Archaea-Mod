@@ -21,8 +21,8 @@ namespace ArchaeaMod.ModUI
     public class OptionsUI
     {
         private static string choiceName = "";
-        private static string[] classes = new string[] { "All", "Melee", "Magic", "Ranged", "Throwing", "Summoner" };
-        private static string[] categories = new string[] { "Class Select", "Archaea Mode", "Cordoned Biomes" };
+        private static string[] classes = new string[] { "Melee", "Ranged", "Magic", "Summoner", "All" };
+        private static string[] categories = new string[] { "Class Select", "Cordoned Biomes", "Archaea Mode" };
         private static int choice = 0;
         private static Element[] classOptions;
         private static Element[] mainOptions;
@@ -77,7 +77,7 @@ namespace ArchaeaMod.ModUI
             {
                 for (int i = 0; i < categories.Length; i++)
                 {
-                    sb.Draw(Main.magicPixel, mainOptions[i].bounds, mainOptions[i].color);
+                    sb.Draw(mod.GetTexture("Gores/config_icons"), mainOptions[i].bounds, new Rectangle(44 * i, 0, 44, 44), mainOptions[i].color);
                     if (mainOptions[i].HoverOver())
                     {
                         if (i == 0 && mainOptions[i].LeftClick())
@@ -103,7 +103,7 @@ namespace ArchaeaMod.ModUI
                     mainOptions[2].color = mainOptions[2].active ? Color.Blue : Color.White;
                 }
                 */
-                sb.Draw(Main.magicPixel, apply.bounds, apply.color = selected != null ? Color.White : Color.Gray);
+                sb.Draw(mod.GetTexture("Gores/config_icons"), apply.bounds, new Rectangle(44 * 4, 0, 44, 44), apply.color = selected != null ? Color.White : Color.Gray);
                 if (apply.HoverOver())
                     sb.DrawString(Main.fontMouseText, "Apply", new Vector2(apply.bounds.X, apply.bounds.Bottom), Color.White);
                 if (apply.LeftClick() && apply.color != Color.Gray)
@@ -113,8 +113,8 @@ namespace ArchaeaMod.ModUI
                         NetHandler.Send(Packet.SyncClass, 256, -1, player.whoAmI, choice + 1, player.GetModPlayer<ArchaeaPlayer>().playerUID);
                     if (player == ArchaeaWorld.firstPlayer)
                     {
-                        ModeToggle.archaeaMode = mainOptions[1].active;
-                        modWorld.cordonBounds = mainOptions[2].active;
+                        modWorld.cordonBounds = mainOptions[1].active;
+                        ModeToggle.archaeaMode = mainOptions[2].active;
                     }
                 }
             }
@@ -123,7 +123,7 @@ namespace ArchaeaMod.ModUI
         {
             for (int i = 0; i < classes.Length; i++)
             {
-                sb.Draw(Main.magicPixel, classOptions[i].bounds, classOptions[i].color);
+                sb.Draw(mod.GetTexture("Gores/class_icons"), classOptions[i].bounds, new Rectangle(44 * i, 0, 44, 44), classOptions[i].color);
                 if (classOptions[i].HoverOver())
                 {
                     if (classOptions[i].LeftClick())
@@ -135,7 +135,7 @@ namespace ArchaeaMod.ModUI
                     sb.DrawString(Main.fontMouseText, classes[i], new Vector2(classOptions[i].bounds.X, classOptions[i].bounds.Bottom), Color.White);
                 }
             }
-            sb.Draw(Main.magicPixel, back.bounds, selected != null ? Color.White : Color.Gray);
+            sb.Draw(mod.GetTexture("Gores/config_icons"), back.bounds, new Rectangle(44 * 3, 0, 44, 44), selected != null ? Color.White : Color.Gray);
             if (back.HoverOver())
                 sb.DrawString(Main.fontMouseText, "Go Back", new Vector2(back.bounds.X, back.bounds.Bottom), Color.White);
             if (selected != null)
@@ -188,6 +188,102 @@ namespace ArchaeaMod.ModUI
             {
                 sb.Draw(texture, bounds, color);
             }
+        }
+    }
+    public class TextBox
+    {
+        public bool active;
+        public string text = "";
+        public Color color
+        {
+            get { return active ? Color.DodgerBlue * 0.67f : Color.DodgerBlue * 0.33f; }
+        }
+        public Rectangle box;
+        private KeyboardState oldState;
+        private KeyboardState keyState
+        {
+            get { return Keyboard.GetState(); }
+        }
+        private SpriteBatch sb
+        {
+            get { return Main.spriteBatch; }
+        }
+        public TextBox(Rectangle box)
+        {
+            this.box = box;
+        }
+        public bool LeftClick()
+        {
+            return box.Contains(Main.MouseScreen.ToPoint()) && ArchaeaPlayer.LeftClick();
+        }
+        public bool HoverOver()
+        {
+            return box.Contains(Main.MouseScreen.ToPoint());
+        }
+        public void UpdateInput()
+        {
+            if (active)
+            {
+                foreach (Keys key in keyState.GetPressedKeys())
+                {
+                    if (oldState.IsKeyUp(key))
+                    {
+                        if (key == Keys.F3)
+                            return;
+                        if (key == Keys.Back)
+                        {
+                            if (text.Length > 0)
+                                text = text.Remove(text.Length - 1);
+                            oldState = keyState;
+                            return;
+                        }
+                        else if (key == Keys.Space)
+                            text += " ";
+                        else if (key == Keys.OemPeriod)
+                            text += ".";
+                        else if (text.Length < 24 && key != Keys.OemPeriod)
+                        {
+                            string n = key.ToString().ToLower();
+                            if (n.StartsWith("d") && n.Length == 2)
+                                n = n.Substring(1);
+                            text += n;
+                        }
+                    }
+                }
+                oldState = keyState;
+            }
+        }
+        public void DrawText()
+        {
+            sb.Draw(Main.magicPixel, box, color);
+            sb.DrawString(Main.fontMouseText, text, new Vector2(box.X + 2, box.Y + 1), Color.White);
+        }
+    }
+    public class Button
+    {
+        public string text = "";
+        public Color color
+        {
+            get { return box.Contains(Main.MouseScreen.ToPoint()) ? Color.DodgerBlue * 0.67f : Color.DodgerBlue * 0.33f; }
+        }
+        public Rectangle box;
+        private SpriteBatch sb
+        {
+            get { return Main.spriteBatch; }
+        }
+        public bool LeftClick()
+        {
+            return box.Contains(Main.MouseScreen.ToPoint()) && ArchaeaPlayer.LeftClick();
+        }
+        public Button(string text, Rectangle box)
+        {
+            this.text = text;
+            this.box = box;
+        }
+        public void Draw()
+        {
+            sb.Draw(Main.magicPixel, box, color);
+            sb.DrawString(Main.fontMouseText, text, new Vector2(box.X + 2, box.Y + 2), Color.White * 0.90f);
         }
     }
 }
