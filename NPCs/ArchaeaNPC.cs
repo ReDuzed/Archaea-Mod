@@ -121,6 +121,12 @@ namespace ArchaeaMod.NPCs
                 if (!Main.dayTime)
                     shop.item[nextSlot].SetDefaults(mod.ItemType<Items.Tiles.m_biomepainting>());
             }
+            else if (type == NPCID.Wizard)
+            {
+                shop.item[nextSlot].SetDefaults(mod.ItemType<Items.Tiles.mbox_magno_1>());
+                shop.item[nextSlot + 1].SetDefaults(mod.ItemType<Items.Tiles.mbox_magno_2>());
+                shop.item[nextSlot + 2].SetDefaults(mod.ItemType<Items.Tiles.mbox_magno_boss>());
+            }
         }
     }
     public class ArchaeaNPC : GlobalNPC
