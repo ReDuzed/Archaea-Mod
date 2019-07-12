@@ -79,6 +79,10 @@ namespace ArchaeaMod
         {
             get { return (ushort)getMod.WallType<Walls.magno_cavewall_unsafe>(); }
         }
+        public static ushort ambientRocks
+        {
+            get { return (ushort)getMod.TileType<Tiles.ambient_rocks>(); }
+        }
         public static ushort skyBrick
         {
             get { return (ushort)getMod.TileType<Tiles.sky_brick>(); }
@@ -172,14 +176,33 @@ namespace ArchaeaMod
                             Tile bottom = Main.tile[i, j + 1];
                             Tile left = Main.tile[i - 1, j];
                             Tile right = Main.tile[i + 1, j];
+                            Tile rock = null;
                             if (top.type == magnoStone && top.active())
+                            {
                                 style = 0;
+                                if (WorldGen.genRand.Next(10) == 0)
+                                {
+                                    t.PlaceTile(i, j, ambientRocks, true, false, 4, false, WorldGen.genRand.Next(new int[] { 0 , 3 }));
+                                    rock = Main.tile[i, j];
+                                    if (rock.type == ambientRocks)
+                                        Main.tile[i, j].frameX = (short)(18 * WorldGen.genRand.Next(3));
+                                }
+                            }
                             if (left.type == magnoStone && left.active())
                                 style = 1;
                             if (right.type == magnoStone && right.active())
                                 style = 2;
                             if (bottom.type == magnoStone && bottom.active())
+                            {
                                 style = 3;
+                                if (WorldGen.genRand.Next(10) == 0)
+                                {
+                                    t.PlaceTile(i, j, ambientRocks, true, false, 4, false, WorldGen.genRand.Next(new int[] { 1 , 2 }));
+                                    rock = Main.tile[i, j];
+                                    if (rock.type == ambientRocks)
+                                        Main.tile[i, j].frameX = (short)(18 * WorldGen.genRand.Next(3));
+                                }
+                            }
                             t.PlaceTile(i, j, crystal, true, false, 10, false, style);
                             if (!Main.tile[i + 1, j].active())
                             {

@@ -23,7 +23,10 @@ namespace ArchaeaMod.ModUI
         private static string choiceName = "";
         private static string[] classes = new string[] { "Melee", "Ranged", "Magic", "Summoner", "All" };
         private static string[] categories = new string[] { "Class Select", "Cordoned Biomes", "Archaea Mode" };
+        private static bool initElements;
         private static int choice = 0;
+        private const int offset = 32;
+        private static int oldWidth, oldHeight;
         private static Element[] classOptions;
         private static Element[] mainOptions;
         private static Element apply;
@@ -36,22 +39,35 @@ namespace ArchaeaMod.ModUI
         {
             mainOptions = new Element[categories.Length];
             classOptions = new Element[classes.Length];
-            int offset = 32;
-            apply = new Element(new Rectangle(Main.screenWidth / 2 - offset, Main.screenHeight / 2 + 48, 64, 64));
-            back = new Element(new Rectangle(Main.screenWidth / 2 - offset, Main.screenHeight / 2 + 48, 64, 64));
+            apply = new Element(Rectangle.Empty);
+            back = new Element(Rectangle.Empty);
+            oldWidth = Main.screenWidth;
+            oldHeight = Main.screenHeight;
+            classOptions = new Element[classes.Length];
+            mainOptions = new Element[categories.Length];
+            for (int i = 0; i < classes.Length; i++)
+                classOptions[i] = new Element(Rectangle.Empty);
+            for (int j = 0; j < categories.Length; j++)
+                mainOptions[j] = new Element(Rectangle.Empty);
+            UpdateLocation();
+        }
+        internal static void UpdateLocation()
+        {
+            apply.bounds = new Rectangle(Main.screenWidth / 2 - offset, Main.screenHeight / 2 + 48, 64, 64);
+            back.bounds = new Rectangle(Main.screenWidth / 2 - offset, Main.screenHeight / 2 + 48, 64, 64);
             for (int i = 0; i < classes.Length; i++)
             {
                 float angle = (float)Math.PI * 2f / classes.Length;
                 int cos = (int)(Main.screenWidth / 2 + 196f * Math.Cos(angle * i - Math.PI / 2f));
                 int sine = (int)(Main.screenHeight / 2 + 196f * Math.Sin(angle * i - Math.PI / 2f));
-                classOptions[i] = new Element(new Rectangle(cos - offset, sine - offset, 64, 64));
+                classOptions[i].bounds = new Rectangle(cos - offset, sine - offset, 64, 64);
             }
             for (int j = 0; j < categories.Length; j++)
             {
                 float angle = (float)Math.PI * 2f / categories.Length;
                 int cos = (int)(Main.screenWidth / 2 + 196f * Math.Cos(angle * j - Math.PI / 2f));
                 int sine = (int)(Main.screenHeight / 2 + 196f * Math.Sin(angle * j - Math.PI / 2f));
-                mainOptions[j] = new Element(new Rectangle(cos - offset, sine - offset, 64, 64));
+                mainOptions[j].bounds = new Rectangle(cos - offset, sine - offset, 64, 64);
             }
         }
         private static bool reset = true;
@@ -65,6 +81,12 @@ namespace ArchaeaMod.ModUI
                 Initialize();
                 apply.color = Color.Gray;
                 reset = false;
+            }
+            if (classOptions != null && (oldWidth != Main.screenWidth || oldHeight != Main.screenHeight))
+            {
+                oldWidth = Main.screenWidth;
+                oldHeight = Main.screenHeight;
+                UpdateLocation();
             }
             mod = ModLoader.GetMod("ArchaeaMod");
             modPlayer = player.GetModPlayer<ArchaeaPlayer>(mod);
@@ -262,27 +284,36 @@ namespace ArchaeaMod.ModUI
     public class Button
     {
         public string text = "";
-        public Color color
+        public Color color(bool select = true)
         {
-            get { return box.Contains(Main.MouseScreen.ToPoint()) ? Color.DodgerBlue * 0.67f : Color.DodgerBlue * 0.33f; }
+            if (select)
+                return box.Contains(Main.MouseScreen.ToPoint()) ? Color.DodgerBlue * 0.67f : Color.DodgerBlue * 0.33f;
+            else
+            {
+                return box.Contains(Main.MouseScreen.ToPoint()) ? Color.White : Color.White * 0.67f;
+            }
         }
         public Rectangle box;
         private SpriteBatch sb
         {
             get { return Main.spriteBatch; }
         }
+        public Texture2D texture;
         public bool LeftClick()
         {
             return box.Contains(Main.MouseScreen.ToPoint()) && ArchaeaPlayer.LeftClick();
         }
-        public Button(string text, Rectangle box)
+        public Button(string text, Rectangle box, Texture2D texture = null)
         {
+            this.texture = texture;
+            if (texture == null)
+                this.texture = Main.magicPixel;
             this.text = text;
             this.box = box;
         }
-        public void Draw()
+        public void Draw(bool select = true)
         {
-            sb.Draw(Main.magicPixel, box, color);
+            sb.Draw(texture, box, color(select));
             sb.DrawString(Main.fontMouseText, text, new Vector2(box.X + 2, box.Y + 2), Color.White * 0.90f);
         }
     }
