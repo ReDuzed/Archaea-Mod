@@ -38,7 +38,7 @@ namespace ArchaeaMod.Items.Tiles
             recipe.AddIngredient(item.type);
             recipe.AddTile(TileID.WorkBenches);
             recipe.SetResult(mod.ItemType<Walls.sky_brickwall>(), 4);
-            recipe.Create();
+            recipe.AddRecipe();
         }
     }
 }

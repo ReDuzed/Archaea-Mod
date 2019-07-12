@@ -40,7 +40,7 @@ namespace ArchaeaMod.Items.Tiles
             recipe.AddIngredient(mod.ItemType<Merged.Items.Materials.magno_bar>(), 1);
             recipe.AddTile(TileID.Anvils);
             recipe.SetResult(item.type);
-            recipe.Create();
+            recipe.AddRecipe();
         }
     }
 }

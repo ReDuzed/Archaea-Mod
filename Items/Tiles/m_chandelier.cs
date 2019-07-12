@@ -44,7 +44,7 @@ namespace ArchaeaMod.Items.Tiles
             recipe.AddIngredient(TileID.Chain, 1);
             recipe.AddTile(TileID.Anvils);
             recipe.SetResult(item.type);
-            recipe.Create();
+            recipe.AddRecipe();
         }
     }
 }
