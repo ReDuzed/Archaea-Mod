@@ -1,7 +1,7 @@
 author = TerrorPenguin, WarrenMark, RJ, PixelOrigin, larson, Duze
-version = 0.2
+version = 0.2.0.1
 displayName = Archaea Mod
-homepage = 
+homepage = http://www.circleprefect.com/modpage
 hideCode = true
 hideResources = true
 includeSource = false
