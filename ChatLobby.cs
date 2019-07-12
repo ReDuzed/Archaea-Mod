@@ -127,7 +127,7 @@ namespace ArchaeaMod
                             return;
                         }
                         Lobby.LobbyServer.Main(new string[] { details[1].text });
-                        ChatLobbyConnect("127.0.0.1");
+                        Main.NewText("To join the lobby just hosted locally, connect using 127.0.0.1 (localhost) in the IP field");
                     }
                 }
                 else
