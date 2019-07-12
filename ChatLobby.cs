@@ -17,7 +17,7 @@ namespace ArchaeaMod
 {
     public class ChatLobby : ModPlayer
     {
-        private bool init, hint;
+        private bool init, hint, hintChat;
         private bool connected, connect, muted;
         public bool showLobbyConnect;
         private int oldText;
@@ -195,6 +195,11 @@ namespace ArchaeaMod
                     }
                 }
             };
+            if (!hintChat)
+            {
+                Main.NewText("Right-Shift sends lobby messages");
+                hintChat = true;
+            }
             return client.Connected;
         }
     }
