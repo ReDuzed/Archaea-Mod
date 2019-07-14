@@ -1,2 +1,0 @@
-#Latest-Stable
-Contains the latest stable changes that may or may not be tentative for the main release.
