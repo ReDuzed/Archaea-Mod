@@ -33,6 +33,7 @@ namespace ArchaeaMod.Merged.Projectiles
 
         bool spawnOK = false;
         int buffer = 256;
+        const int startHeight = 640;
         int x, y;
         public void Initialize()
         {
@@ -56,10 +57,18 @@ namespace ArchaeaMod.Merged.Projectiles
         }
         bool init = false;
         bool target = false;
+        private bool overworld;
         int ticks = 0;
         int maxTime;
         int npcTarget;
         float rot = 0;
+        private const int
+            AI_RAIN = 1,
+            AI_STATIC = 2;
+        private int projAI
+        {
+            get { return (int)projectile.ai[0]; }
+        }
         const float radians = 0.017f;
         Vector2 npcCenter;
         public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
@@ -85,7 +94,18 @@ namespace ArchaeaMod.Merged.Projectiles
                 direction = -1;
             else direction = 1;
 
-            projectile.velocity.Y = 1f;
+            if (projAI == AI_RAIN)
+            {
+                if (projectile.velocity.Y < 9.17f) 
+                    projectile.velocity.Y += 0.0917f;
+                int dust = Dust.NewDust(projectile.Center, 2, 2, mod.DustType<Dusts.cinnabar_dust>());
+                Main.dust[dust].alpha = projectile.alpha;
+            }
+            else if (projAI == AI_STATIC)
+            {
+                if (projectile.alpha <= 0)
+                    projectile.Kill();
+            }
 
             foreach (NPC n in Main.npc)
             {
@@ -105,8 +125,9 @@ namespace ArchaeaMod.Merged.Projectiles
 
             if (!IsTile(projectile.position.X, projectile.position.Y))
             {
-                projectile.alpha = 255 * (maxTime - ticks) / maxTime;
-                Lighting.AddLight(projectile.Center, new Vector3(0.804f, 0.361f, 0.361f));
+                int alpha = projectile.alpha = 255 * (maxTime - ticks) / maxTime;
+                float brightness = (float)ticks / maxTime;
+                Lighting.AddLight(projectile.Center, new Vector3(0.804f * brightness, 0.361f * brightness, 0.361f * brightness));
             }
 
             projectile.frameCounter++;
@@ -161,14 +182,33 @@ namespace ArchaeaMod.Merged.Projectiles
 
         public void NewPosition(Player player, int maxTries)
         {
-            float PosX = Main.rand.Next((int)player.position.X - buffer, (int)player.position.X + buffer);
-            float PosY = Main.rand.Next((int)player.position.Y - (int)(buffer * 1.67f), (int)player.position.Y - buffer);
-            for (int i = 0; i < maxTries; i++)
+            float PosX = 0f, PosY = 0f;
+            projectile.alpha = 250;
+            if (projAI == AI_RAIN)
             {
-                if(!IsTile(PosX, PosY))
+                projectile.scale = 0.75f;
+                PosX = Main.rand.Next((int)player.position.X - buffer, (int)player.position.X + buffer);
+                PosY = Main.rand.Next((int)player.position.Y - (int)(startHeight * 1.20f), (int)player.position.Y - startHeight);
+                for (int i = 0; i < maxTries; i++)
                 {
-                    SyncProj(PosX, PosY);
-                    break;
+                    if(!IsTile(PosX, PosY))
+                    {
+                        SyncProj(PosX, PosY);
+                        break;
+                    }
+                }
+            }
+            else if (projAI == AI_STATIC)
+            {
+                PosX = Main.rand.Next((int)player.position.X - buffer, (int)player.position.X + buffer);
+                PosY = Main.rand.Next((int)player.position.Y - (int)(buffer * 1.67f), (int)player.position.Y + buffer);
+                for (int i = 0; i < maxTries; i++)
+                {
+                    if(!IsTile(PosX, PosY))
+                    {
+                        SyncProj(PosX, PosY);
+                        break;
+                    }
                 }
             }
         }
