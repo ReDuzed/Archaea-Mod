@@ -50,12 +50,12 @@ namespace ArchaeaMod.Merged.Items.Armors
         int x, y;
         public override void UpdateArmorSet(Player player)
         {
-            player.setBonus = "Generates lethal" 
-                +   "\nspores";
-
-            if (ticks++ % 60 == 0)
+            player.setBonus = "Generates lethal spores";
+            bool overWorld = player.ZoneOverworldHeight || player.ZoneSkyHeight;
+            int interval = overWorld ? 20 : 60;
+            if (ticks++ % interval == 0)
             {
-                int newProj = Projectile.NewProjectile(player.Center, Vector2.Zero, mod.ProjectileType("cinnabar_spore"), 14, 0f, player.whoAmI, x, y);
+                int newProj = Projectile.NewProjectile(player.Center, Vector2.Zero, mod.ProjectileType("cinnabar_spore"), 14, 0f, player.whoAmI, overWorld ? 1 : 2);
             }
         }
 
