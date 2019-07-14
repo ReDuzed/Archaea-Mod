@@ -152,8 +152,8 @@ namespace ArchaeaMod
                         Send(Packet.SyncInput, t, -1);
                     else
                     {
-                        Mode.ModeToggle modWorld = mod.GetModWorld<Mode.ModeToggle>();
-                        modWorld.progress = !modWorld.progress;
+                        ArchaeaPlayer modPlayer = Main.LocalPlayer.GetModPlayer<ArchaeaPlayer>();
+                        modPlayer.progress = !modPlayer.progress;
                     }
                     break;
                 case Packet.SyncEntity:

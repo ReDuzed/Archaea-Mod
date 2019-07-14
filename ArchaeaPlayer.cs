@@ -106,7 +106,7 @@ namespace ArchaeaMod
             {
                 if (Main.netMode == 0)
                 {
-                    Main.NewText("To enter commands, input [Tab + (Hold) Left Control] (instead of Enter), [F2 + LeftControl] for item spawning using chat search via item name, [F3 + LeftControl] for NPC debug and balancing", Color.LightBlue);
+                    Main.NewText("To enter commands, input [Right Shift + (Hold) Left Control] (instead of Enter), [F2 + LeftControl] for item spawning using chat search via item name, [F3 + LeftControl] for NPC debug and balancing", Color.LightBlue);
                     Main.NewText("Commands: /list 'npcs' 'items1' 'items2' 'items3', /npc [name], /npc 'strike', /item [name], /spawn, /day, /night, /rain 'off' 'on', hold [Left Control + Left Alt] and click to go to mouse", textColor);
                 }
                 if (Main.netMode == 2)
@@ -150,7 +150,13 @@ namespace ArchaeaMod
                 else player.Teleport(Main.MouseWorld);
             }
             string chat = (string)Main.chatText.Clone();
-            bool enteredCommand = KeyPress(Keys.Tab);
+            bool enteredCommand = KeyPress(Keys.LeftAlt);
+            Action clearChat = delegate()
+            {
+                Main.chatText = string.Empty;
+                Main.drawingPlayerChat = false;
+                Main.chatRelease = false;
+            };
             if (chat.StartsWith("/info") && KeyHold(Keys.LeftControl))
             {
                 if (enteredCommand)
@@ -161,6 +167,7 @@ namespace ArchaeaMod
                         Main.NewText("Press [F2] and type an item name in chat, then hover over item icon", textColor);
                         Main.NewText("[F3] for NPC debug and balancing", textColor);
                     }
+                    clearChat();
                 }
             }
             if (chat.StartsWith("/") && KeyHold(Keys.LeftControl))
@@ -342,12 +349,8 @@ namespace ArchaeaMod
                         if (enteredCommand)
                             Main.raining = true;
                 }
-            }
-            if (enteredCommand)
-            {
-                Main.chatText = string.Empty;
-                Main.drawingPlayerChat = false;
-                Main.chatRelease = false;
+                if (enteredCommand)
+                    clearChat();
             }
             if (KeyPress(Keys.F2) && KeyHold(Keys.LeftControl))
             {
@@ -396,7 +399,7 @@ namespace ArchaeaMod
         private int boundsCheck;
         public override void PostUpdate()
         {
-            if (outOfBounds)
+            if (BiomeBounds())
             {
                 effectTime--;
                 for (float i = 0; i < Math.PI * 2f; i += new Draw().radians(effectTime / 64f))
@@ -438,12 +441,37 @@ namespace ArchaeaMod
                 }
                 classChosen = true;
             }
+            if (!init)
+            {
+                objectiveButton = new Button("Mode Status", new Rectangle(20, 284, 10 * 11, 24));
+                init = true;
+            }
+            ModeToggle.totalTime += (float)Main.frameRate / 60f;
+            ModeToggle.dayCount = ModeToggle.totalTime / (float)(Main.dayLength + Main.nightLength);
+            if (objectiveButton.LeftClick() && Main.playerInventory)
+                progress = !progress;
         }
 
+        private bool init;
+        public bool progress;
+        private Button objectiveButton;
+        private bool initChoice;
+        private int useBuffer = 0;
         public override bool PreItemCheck()
         {
             Item item = player.inventory[player.selectedItem];
             bool nonTool = item.pick == 0 && item.axe == 0 && item.hammer == 0;
+            int useTime = player.HeldItem.useTime;
+            if (classChoice != ClassID.None && !initChoice)
+            {
+                if (useBuffer < useTime)
+                {
+                    useBuffer++;
+                    return true;
+                }
+                if (player.releaseUseItem)
+                    initChoice = true;
+            }
             switch (classChoice)
             {
                 case -1:
@@ -471,6 +499,8 @@ namespace ArchaeaMod
                         goto case -1;
                     break;
                 case ClassID.All:
+                    break;
+                case ClassID.None:
                     break;
             }
             return true;
@@ -510,7 +540,7 @@ namespace ArchaeaMod
         private bool[] zones = new bool[index];
         private const int index = 12;
         private Vector2 oldPosition;
-        public void BiomeBounds()
+        public bool BiomeBounds()
         {
             zones = new bool[]
             {
@@ -526,7 +556,8 @@ namespace ArchaeaMod
                 player.ZoneSnow,
                 player.ZoneUndergroundDesert,
                 SkyFort,
-                MagnoBiome
+                MagnoBiome,
+                player.position.X < (Main.spawnTileX - 300) * 16f || player.position.X > (Main.spawnTileX + 300) * 16f
             };
             var modWorld = mod.GetModWorld<ArchaeaWorld>();
             if (modWorld.cordonBounds)
@@ -548,9 +579,15 @@ namespace ArchaeaMod
                     }
                 }
             }
+            return outOfBounds;
         }
         private bool ObjectiveMet(int zone)
         {
+            if (zone == BiomeID.OutOfSpawn)
+            {
+                if (ModeToggle.dayCount < 1)
+                    return false;
+            }
             switch (zone)
             {
                 case BiomeID.Beach:
@@ -562,7 +599,7 @@ namespace ArchaeaMod
                 case BiomeID.Fort:
                     break;
             }
-            return false;
+            return true;
         }
         private float darkAlpha = 0f;
         private void DarkenedVision()
@@ -608,13 +645,27 @@ namespace ArchaeaMod
                 DebugMenu();
             if (spawnMenu)
                 SpawnMenu();
+            if (Main.playerInventory)
+            {
+                if (progress)
+                {
+                    Rectangle panel = new Rectangle(306 - 160, 255, 180, 100);
+                    sb.Draw(Main.magicPixel, panel, Color.DodgerBlue * 0.33f);
+                    sb.DrawString(Main.fontMouseText, "Life scale: " + new ModeNPC().ModeChecksLifeScale(), new Vector2(panel.Left + 4, panel.Top + 4), Color.White);
+                    sb.DrawString(Main.fontMouseText, "Damage scale: " + new ModeNPC().ModeChecksDamageScale(), new Vector2(panel.Left + 4, panel.Top + 24), Color.White);
+                    sb.DrawString(Main.fontMouseText, "Day: " + Math.Round(ModeToggle.dayCount + 1, 0), new Vector2(panel.Left + 4, panel.Top + 44), Color.White);
+                    sb.DrawString(Main.fontMouseText, "World time: " + Math.Round(ModeToggle.totalTime / 60d / 60d, 1), new Vector2(panel.Left + 4, panel.Top + 64), Color.White);
+                }
+                if (drawInfo.drawPlayer.active && ModeToggle.archaeaMode)
+                    objectiveButton.Draw();
+            }
         }
-        private bool init;
+        private bool initDebug;
         private List<string> name = new List<string>();
         private List<int> id = new List<int>();
         private void DebugMenu()
         {
-            if (!init || id == null || id.Count == 0 || name == null || name.Count == 0)
+            if (!initDebug || id == null || id.Count == 0 || name == null || name.Count == 0)
             {
                 name.Clear();
                 id.Clear();
@@ -626,7 +677,7 @@ namespace ArchaeaMod
                     if (item < Main.item.Length)
                         Main.item[item].active = false;
                 }
-                init = true;
+                initDebug = true;
             }
             Func<string, Texture2D[]> search = delegate(string Name)
             {
@@ -779,7 +830,8 @@ namespace ArchaeaMod
                 Snow = 9,
                 UGDesert = 10,
                 Fort = 11,
-                Magno = 12;
+                Magno = 12,
+                OutOfSpawn = 13;
         }
     }
 

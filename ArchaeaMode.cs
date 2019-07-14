@@ -21,9 +21,10 @@ namespace ArchaeaMod.Mode
     public class ModeToggle : ModWorld
     {
         public static bool archaeaMode;
-        public bool progress;
         public static float healthScale;
         public static float damageScale;
+        public static float dayCount;
+        public static float totalTime;
         public override TagCompound Save()
         {
             return new TagCompound
@@ -54,45 +55,6 @@ namespace ArchaeaMod.Mode
             archaeaMode = reader.ReadBoolean();
             totalTime = reader.ReadSingle();
             dayCount = reader.ReadSingle();
-        }
-        private bool init;
-        private Button objectiveButton;
-        public override void PreUpdate()
-        {
-            if (!init)
-            {
-                objectiveButton = new Button("Mode Status", new Rectangle(20, 284, 10 * 11, 24));
-                init = true;
-            }
-        }
-        public static float dayCount;
-        public float totalTime;
-        public override void PostUpdate()
-        {
-            totalTime += (float)Main.frameRate / 60f;
-            dayCount = totalTime / (float)Main.dayLength;
-            if (objectiveButton.LeftClick() && Main.playerInventory)
-                progress = !progress;
-        }
-        public override void PostDrawTiles()
-        {
-            SpriteBatch sb = Main.spriteBatch;
-            if (Main.playerInventory)
-            {
-                sb.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
-                if (progress)
-                {
-                    Rectangle panel = new Rectangle(306 - 160, 255, 180, 100);
-                    sb.Draw(Main.magicPixel, panel, Color.DodgerBlue * 0.33f);
-                    sb.DrawString(Main.fontMouseText, "Life scale: " + new ModeNPC().ModeChecksLifeScale(), new Vector2(panel.Left + 4, panel.Top + 4), Color.White);
-                    sb.DrawString(Main.fontMouseText, "Damage scale: " + new ModeNPC().ModeChecksDamageScale(), new Vector2(panel.Left + 4, panel.Top + 24), Color.White);
-                    sb.DrawString(Main.fontMouseText, "Day: " + Math.Round(dayCount + 1, 0), new Vector2(panel.Left + 4, panel.Top + 44), Color.White);
-                    sb.DrawString(Main.fontMouseText, "World time: " + Math.Round(totalTime / 60d / 60d, 1), new Vector2(panel.Left + 4, panel.Top + 64), Color.White);
-                }
-                if (archaeaMode)
-                    objectiveButton.Draw();
-                sb.End();
-            }
         }
     }
     public class ModeNPC : GlobalNPC
