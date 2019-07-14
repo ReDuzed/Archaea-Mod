@@ -1,1 +1,3 @@
-Archaea Mod using the tModLoader API.
+Terraria modification using the tModLoader API.
+
+The Archaea Mod dev team has put together a second release that overhauls the content from the first release while including new additions.
