@@ -21,9 +21,11 @@ namespace ArchaeaMod.Merged.Items
             item.maxStack = 250;
             item.consumable = true;
             item.expert = true;
-            bossBagNPC = mod.NPCType("boss_magnohead");
         }
-
+        public override int BossBagNPC
+        {
+            get { return mod.NPCType("boss_magnohead");}
+        }
         public override bool CanRightClick()
         {
             return true;
