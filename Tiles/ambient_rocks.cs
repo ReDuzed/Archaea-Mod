@@ -59,5 +59,9 @@ namespace ArchaeaMod.Tiles
             mineResist = 1.2f;
             minPick = 45;
         }
+        public override void PlaceInWorld(int i, int j, Item item)
+        {
+            Main.tile[i, j].frameX = (short)(18 * WorldGen.genRand.Next(3));
+        }
     }
 }
