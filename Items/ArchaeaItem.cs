@@ -47,15 +47,15 @@ namespace ArchaeaMod.Items
             float angle = NPCs.ArchaeaNPC.AngleTo(player.Center, Main.MouseWorld);
             return NPCs.ArchaeaNPC.AngleBased(player.position, angle, player.width / 4).X - player.width / 2 - 4;
         }
-        public static bool NotEquipped(Player player, int type)
+        public static bool NotEquipped(Player player, Item item)
         {
             int index = 0;
             for (int i = 0; i < player.armor.Length; i++)
             {
-                if (player.armor[i].type != type)
+                if (player.armor[i] != item)
                     index++;
                 else break;
-                if (index == player.armor.Length - 1 && player.armor[i].type != type)
+                if (index == player.armor.Length - 1 && player.armor[i] != item)
                     return true;
             }
             index = 0;
