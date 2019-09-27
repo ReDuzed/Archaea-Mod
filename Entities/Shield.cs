@@ -34,7 +34,7 @@ namespace ArchaeaMod.Entities
             float cos = player.Center.X + (float)(radius * Math.Cos(start + orbit));
             float sine = player.Center.Y + (float)(radius * Math.Sin(start + orbit));
             Center = new Vector2(cos, sine);
-            if (!player.active || Items.ArchaeaItem.NotEquipped(player, ModLoader.GetMod("ArchaeaMod").ItemType<Items.m_shield>()))
+            if (!player.active || Items.ArchaeaItem.NotEquipped(player, ModLoader.GetMod("ArchaeaMod").GetItem<Items.m_shield>().item))
                 Kill(true);
         }
         public override void Kill(bool effect)
