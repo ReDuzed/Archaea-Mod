@@ -84,7 +84,7 @@ namespace ArchaeaMod.Items.Alternate
         }
         public override void UpdateEquip(Player player)
         {
-            if (ArchaeaItem.NotEquipped(player, item, ref x))
+            if (ArchaeaItem.NotEquipped(player, item))
             {
                 ai = -1;
                 foreach (Shield s in shield)
